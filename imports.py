@@ -12,3 +12,5 @@ import random
 import re
 import string
 import sys
+import sklearn as sk
+import tabula
