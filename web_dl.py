@@ -1,13 +1,13 @@
 import os
 from datetime import date
-
 import requests
 from bs4 import BeautifulSoup as BS
 
-import constants as c
+import cirilib.constants as c
 
-DATASET_DIR = c.DATASET_DIR
+c.initialise_directory()
 url_who = c.url_who
+PDF_DIR = c.PDF_DIR
 
 
 def get_link_sr(url=url_who):
@@ -39,7 +39,7 @@ def download_report():
 	situation_reports_links, available_sr_name = get_link_sr()
 	
 	for dl_link, name, i in zip(situation_reports_links, available_sr_name, range(len(available_sr_name), 0, -1)):
-		FILE_DIR = os.path.join(DATASET_DIR, name)
+		FILE_DIR = os.path.join(PDF_DIR, name)
 		if not os.path.exists(FILE_DIR):
 			url_dl = "https://who.int" + dl_link
 			report = requests.get(url_dl)
@@ -58,17 +58,17 @@ def check_new_report(download=False):
 	today = date.today()
 	days_since_begin = abs(today - begin).days
 	
-	number_sr_downloaded = len(os.listdir(DATASET_DIR))
+	number_sr_downloaded = len(os.listdir(PDF_DIR))
 	
-	if number_sr_downloaded <= days_since_begin:
+	if number_sr_downloaded < days_since_begin:
 		print("There might be a new situation report.")
 		if download:
 			download_report()
 		return True
 	else:
 		print(c.WARNING_CHECK_MESSAGE)
+		return False
 
 
 if __name__ == "__main__":
-	c.initialise_directory()
-	download_report()
+	check_new_report(True)
