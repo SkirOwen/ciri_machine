@@ -4,24 +4,10 @@ from datetime import date
 import requests
 from bs4 import BeautifulSoup as BS
 
-DATASET_DIR = ""
-url_who = "https://www.who.int/emergencies/diseases/novel-coronavirus-2019/situation-reports"
-WARNING_CHECK_MESSAGE = """
-Everything seems to be good.
-Though, this only check if there are the same number of report then days since 21 Jan 2020.
-There might be duplicate, but it's unlikely.
-"""
+import constants as c
 
-
-def initialise_directory():
-	global DATASET_DIR
-	
-	if not os.path.isdir(DATASET_DIR):
-		DATASET_DIR = "./dataset"
-	
-	DATASET_DIR = os.path.normcase("./dataset")
-	if DATASET_DIR != "" and not os.path.exists(DATASET_DIR):
-		os.makedirs(DATASET_DIR)
+DATASET_DIR = c.DATASET_DIR
+url_who = c.url_who
 
 
 def get_link_sr(url=url_who):
@@ -80,9 +66,9 @@ def check_new_report(download=False):
 			download_report()
 		return True
 	else:
-		print(WARNING_CHECK_MESSAGE)
+		print(c.WARNING_CHECK_MESSAGE)
 
 
 if __name__ == "__main__":
-	initialise_directory()
+	c.initialise_directory()
 	download_report()
