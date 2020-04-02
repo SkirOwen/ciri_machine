@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup as BS
 
 import cirilib.constants as c
 
-c.initialise_directory()
 url_who = c.url_who
 PDF_DIR = c.PDF_DIR
 
@@ -54,9 +53,12 @@ def download_report():
 
 
 def check_new_report(download=False):
-	begin = date(2020, 1, 21)
+	"""
+	Compute with the number of days elapsed, i.e if today is 2 Apr 2020 then it is only gonna tell
+	that it might be a new sitrep for 2020-04-02 iff it is run after 2020-04-02; this is logical.
+	"""
 	today = date.today()
-	days_since_begin = abs(today - begin).days
+	days_since_begin = abs(today - c.BEGIN_DATE).days
 	
 	number_sr_downloaded = len(os.listdir(PDF_DIR))
 	
@@ -65,10 +67,13 @@ def check_new_report(download=False):
 		if download:
 			download_report()
 		return True
+	elif number_sr_downloaded > days_since_begin:
+		print(c.WARNING_DUPLICATE_REPORT)
 	else:
 		print(c.WARNING_CHECK_MESSAGE)
 		return False
 
 
 if __name__ == "__main__":
+	c.initialise_directory()
 	check_new_report(True)
