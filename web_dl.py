@@ -1,4 +1,5 @@
 import os
+from tqdm import tqdm
 from datetime import date
 import requests
 from bs4 import BeautifulSoup as BS
@@ -7,6 +8,8 @@ import cirilib.constants as c
 
 url_who = c.url_who
 PDF_DIR = c.PDF_DIR
+
+# TODO: get name of last downloaded, to pass to export_from_pdf
 
 
 def get_link_sr(url=url_who):
@@ -41,12 +44,25 @@ def download_report():
 		FILE_DIR = os.path.join(PDF_DIR, name)
 		if not os.path.exists(FILE_DIR):
 			url_dl = "https://who.int" + dl_link
-			report = requests.get(url_dl)
+			# report = requests.get(url_dl)
+			report = requests.get(url_dl, stream=True)
+			
+			# Total size
+			total_size = int(report.headers.get('content-length', 0))
+			block_size = 1024   # 1 Kib
+			t = tqdm(total=total_size, unit='iB', unit_scale=True)
 			
 			with open(FILE_DIR, "wb") as f:
-				f.write(report.content)
+				for data in report.iter_content(block_size):
+					# f.write(report.content)
+					t.update(len(data))
+					f.write(data)
+			t.close()
 			
-			print("Situation report - ", i, ":  downloaded as ", name)
+			if total_size != 0 and t.n != total_size:
+				print("ERROR, something went wrong")
+			else:
+				print("Situation report - ", i, ":  downloaded as ", name)
 			k += 1
 	
 	print("%d situation reports downloaded" % k)
