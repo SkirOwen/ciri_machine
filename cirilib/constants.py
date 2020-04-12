@@ -4,24 +4,26 @@ from datetime import date
 # Possible change: change the directory import either by doing a test of is DATASET_DIR exist and giving the path from
 #  the start or doing ciri.py and execute with python -m ciri.py *****
 
-DATASET_DIR = "./dataset"
-PDF_DIR = os.path.join(DATASET_DIR, "pdf_reports")
-CSV_DIR = os.path.join(DATASET_DIR, "csv_reports")
+WHO_DIR = "./dataset"
+PDF_DIR = os.path.join(WHO_DIR, "pdf_reports")
+CSV_DIR = os.path.join(WHO_DIR, "csv_reports")
+
+DATASET_DIR = "./data_repo_JH"
 
 
 def initialise_directory():
-    global DATASET_DIR
+    global WHO_DIR
     global PDF_DIR
     global CSV_DIR
 
-    if not os.path.isdir(DATASET_DIR):
-        DATASET_DIR = "./dataset"
+    if not os.path.isdir(WHO_DIR):
+        WHO_DIR = "./dataset"
         print(
-            f"Reports will be written to {DATASET_DIR + os.sep}"
+            f"Reports will be written to {WHO_DIR + os.sep}"
         )
 
-    PDF_DIR = os.path.join(DATASET_DIR, "pdf_reports")
-    CSV_DIR = os.path.join(DATASET_DIR, "csv_reports")
+    PDF_DIR = os.path.join(WHO_DIR, "pdf_reports")
+    CSV_DIR = os.path.join(WHO_DIR, "csv_reports")
 
     for folder in [PDF_DIR, CSV_DIR]:
         if folder != "" and not os.path.exists(folder):
@@ -29,6 +31,16 @@ def initialise_directory():
 
 
 url_who = "https://www.who.int/emergencies/diseases/novel-coronavirus-2019/situation-reports"
+
+url_us_data = "https://github.com/nytimes/covid-19-data"
+
+url_jh_cases = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data" \
+                  "/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv "
+
+url_jh_deaths = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data" \
+                  "/csse_covid_19_time_series/time_series_covid19_deaths_global.csv "
+
+
 WARNING_CHECK_MESSAGE = """
 Everything seems to be good!
 Though, this only check if there are the same number of report then days since 21 Jan 2020.

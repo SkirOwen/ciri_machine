@@ -8,4 +8,6 @@ class Coronavirus():
 		
 		table = self.driver.find_element_by_xpath('//*[@id="main_table_countries"]/tbody[1]')
 		country_element = table.find_element_by_xpath("//td[contains(text(), 'China')]")
-		
+		pass
+
+

@@ -2,7 +2,7 @@ import web_dl
 from cirilib.constants import *
 
 import matplotlib.pyplot as plt
-import seaborn as sb
+import seaborn as sns
 import pandas as pd
 import prince
 import sklearn as sk
