@@ -1,5 +1,10 @@
 from cirilib.imports import *
 
+try:
+	import tabula
+except ImportError:
+	print("Please install tabula for python and try again")
+	
 
 def export_from_pdf(file_name):
 	file_path = os.path.join(PDF_DIR, file_name)

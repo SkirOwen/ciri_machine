@@ -1,12 +1,11 @@
-import web_dl
 from cirilib.constants import *
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import prince
-import sklearn as sk
-import tabula
+# import prince
+# import sklearn as sk
+# import tabula
 
 import numpy as np
 import math
@@ -19,5 +18,5 @@ import re
 import string
 import sys
 
-from PIL import Image
-from colour import Color
+# from PIL import Image
+# from colour import Color

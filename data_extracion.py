@@ -1,4 +1,5 @@
 from cirilib.imports import *
+# TODO: something with the dates format, possibly change them to days??
 
 
 def pull_data(selected_data, selected_region, state=None, drop_fips=True):
