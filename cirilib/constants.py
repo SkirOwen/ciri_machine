@@ -15,16 +15,16 @@ def initialise_directory():
     global WHO_DIR
     global PDF_DIR
     global CSV_DIR
-
+    
     if not os.path.isdir(WHO_DIR):
         WHO_DIR = "./dataset"
         print(
             f"Reports will be written to {WHO_DIR + os.sep}"
         )
-
+    
     PDF_DIR = os.path.join(WHO_DIR, "pdf_reports")
     CSV_DIR = os.path.join(WHO_DIR, "csv_reports")
-
+    
     for folder in [PDF_DIR, CSV_DIR]:
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
@@ -32,14 +32,15 @@ def initialise_directory():
 
 url_who = "https://www.who.int/emergencies/diseases/novel-coronavirus-2019/situation-reports"
 
-url_us_data = "https://github.com/nytimes/covid-19-data"
+url_us_data = "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv"
+
+url_us_states = "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv"
 
 url_jh_cases = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data" \
-                  "/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv "
+               "/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv "
 
 url_jh_deaths = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data" \
-                  "/csse_covid_19_time_series/time_series_covid19_deaths_global.csv "
-
+                "/csse_covid_19_time_series/time_series_covid19_deaths_global.csv "
 
 WARNING_CHECK_MESSAGE = """
 Everything seems to be good!
@@ -140,4 +141,62 @@ PROVINCE_REGION = [
     "Bonaire, Sint Eustatius and Saba",
     "Falkland Islands (Malvinas)",
     "Saint Pierre and Miquelon",
+]
+
+STATES = [
+    'Alabama',
+    'Alaska',
+    'Arizona',
+    'Arkansas',
+    'California',
+    'Colorado',
+    'Connecticut',
+    'Delaware',
+    'District of Columbia',
+    'Florida',
+    'Georgia',
+    'Guam',
+    'Hawaii',
+    'Idaho',
+    'Illinois',
+    'Indiana',
+    'Iowa',
+    'Kansas',
+    'Kentucky',
+    'Louisiana',
+    'Maine',
+    'Maryland',
+    'Massachusetts',
+    'Michigan',
+    'Minnesota',
+    'Mississippi',
+    'Missouri',
+    'Montana',
+    'Nebraska',
+    'Nevada',
+    'New Hampshire',
+    'New Jersey',
+    'New Mexico',
+    'New York',
+    'North Carolina',
+    'North Dakota',
+    'Northern Mariana Islands',
+    'Ohio',
+    'Oklahoma',
+    'Oregon',
+    'Pennsylvania',
+    'Puerto Rico',
+    'Rhode Island',
+    'South Carolina',
+    'South Dakota',
+    'Tennessee',
+    'Texas',
+    'Utah',
+    'Vermont',
+    'Virgin Islands',
+    'Virginia',
+    'Washington',
+    'West Virginia',
+    'Wisconsin',
+    'Wyoming'
 ]

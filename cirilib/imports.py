@@ -20,4 +20,4 @@ import string
 import sys
 
 from PIL import Image
-# from colour import Color
+from colour import Color
