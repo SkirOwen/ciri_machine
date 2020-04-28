@@ -2,17 +2,13 @@
 ## Installation
 
 ```bash
-git clone --recurse-submodules https://github.com/SkirOwen/ciri_machine.git
+git clone https://github.com/SkirOwen/ciri_machine.git
 ```  
 
 ### Requirements
 
-
-The packages `pandas` and `tabula` are needed, pandas is already included in Anaconda.
-
-Tabula can easily be install using pip:
+It is better to use Anaconda and then run:
 
 ```
-pip install tabula-py
+pip3 install -r requirements.txt
 ```
-
