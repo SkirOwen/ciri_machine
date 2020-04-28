@@ -23,10 +23,11 @@ def pull_data(selected_data, selected_region, state=None, drop_fips=True):
             df = pd.read_csv(url_us_states)
             df = df.loc[df["state"] == state]
             df = df.drop(["state"], axis=1)
+            if drop_fips:  # drop_fips = False if you need to cross-ref with other data
+                df = df.drop(["fips"], axis=1)
         df_processed = df.drop([data_type], axis=1)  # drop the other column, see data_type
-        if drop_fips:    #
-            df_processed = df_processed.drop(["fips"], axis=1)
-            
+    
+    df_processed = df_processed.set_index("date")
     return df_processed
 
 
@@ -42,9 +43,18 @@ def process_data(df, selected_region, *args):
         if region.empty:    # do the sum for country with only regions, e.g Canada, USA
             region = df.loc[(df["Country/Region"] == selected_region)].groupby("Country/Region", as_index=False).sum()
             k = 3
-    dates = df.iloc[0:0, k:]
-    # Really ugly, need to rework that better and speed it
-    return pd.DataFrame(data={"dates": list(dates), "region": region.values[0][k:]})
+    dates = list(df.iloc[0:0, k:])
+    dates_iso = [date_to_iso(i) for i in dates]
+    
+    return pd.DataFrame(data={"date": dates_iso, "region": region.values[0][k:]})
+
+
+def date_to_iso(date_us_with_slash: str):   # /!\ Cannot take years before 2000. reversed 2k bug ;)
+    d = date_us_with_slash.split("/")
+    day = d[1]
+    month = d[0]
+    year = "20" + d[2]
+    return year + "-" + month + "-" + day
 
 
 if __name__ == "__main__":
