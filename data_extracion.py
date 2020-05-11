@@ -33,8 +33,9 @@ def pull_data(selected_data, selected_region, state=None, drop_fips=True):
 
 # processing data for JH
 def process_data(df, selected_region, *args):
-    k = 4   # start column for the dates
+    k, k_d = 4, 4   # start column for the dates
     selected_region = "Taiwan*" if selected_region == "Taiwan" else selected_region
+    selected_region = "United Kingdom" if selected_region == "UK" else selected_region
     
     if selected_region in PROVINCE_REGION:
         region = df.loc[df["Province/State"] == selected_region]
@@ -43,10 +44,10 @@ def process_data(df, selected_region, *args):
         if region.empty:    # do the sum for country with only regions, e.g Canada, USA
             region = df.loc[(df["Country/Region"] == selected_region)].groupby("Country/Region", as_index=False).sum()
             k = 3
-    dates = list(df.iloc[0:0, k:])
+    dates = list(df.iloc[0:0, k_d:])
     dates_iso = [date_to_iso(i) for i in dates]
     
-    return pd.DataFrame(data={"date": dates_iso, "region": region.values[0][k:]})
+    return pd.DataFrame(data={"date": dates_iso, "region": region.values[0][k:]}, dtype=np.int64)
 
 
 def date_to_iso(date_us_with_slash: str):   # /!\ Cannot take years before 2000. reversed 2k bug ;)
@@ -54,10 +55,21 @@ def date_to_iso(date_us_with_slash: str):   # /!\ Cannot take years before 2000.
     day = d[1]
     month = d[0]
     year = "20" + d[2]
-    return year + "-" + month + "-" + day
+    return year + "-" + month.zfill(2) + "-" + day.zfill(2)
+
+
+def find_a_name(date_of_lockdown, country=None):
+    if country is None:
+        for name in COUNTRIES:
+            pass
 
 
 if __name__ == "__main__":
-    df = pull_data("Confirmed Cases", "US")
+    df = pull_data("Confirmed Cases", "Italy")
+    dfm = pull_data("Reported Deaths", "Italy")
+    df1 = pull_data("Confirmed Cases", "UK")
     print(df)
-    # sns.lineplot(data=df)
+    sns.lineplot(data=df)
+    sns.lineplot(data=dfm)
+    sns.lineplot(data=df1)
+    plt.show()
