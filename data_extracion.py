@@ -84,9 +84,10 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None):
     df_before = pd.DataFrame(columns=["Country", "Cases", "Deaths", "Growth Factor"])
     df_after = pd.DataFrame(columns=["Country", "Cases", "Deaths", "Growth Factor"])
 
+    pbar = tqdm(country)
     for name in country:
-        print(name, " is processing")
-        # for selected_data in ["Confirmed Cases", "Reported Deaths"]: -> then change index k (1 or 2) in .iloc[0:lock, k]
+        pbar.set_description("Processing %s" % name)
+
         df = pull_data(selected_data, name)
 
         lockdown_index = df.date[df.date == date_of_lockdown].index.tolist()[0]
@@ -124,8 +125,8 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None):
         df_after = df_after.append(pd.DataFrame([[name, cases_after, deaths_after, growth_rate_after_mean]],
                                      columns=["Country", "Cases", "Deaths", "Growth Factor"]), ignore_index=True)
 
-        print(name, " processed")
-
+        pbar.update(1)
+    pbar.close()
     return df_before, df_after
 
 

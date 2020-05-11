@@ -17,6 +17,8 @@ import random
 import re
 import string
 import sys
+import time
 
+from tqdm import tqdm
 # from PIL import Image
 # from colour import Color
