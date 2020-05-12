@@ -1,7 +1,8 @@
-from cirilib.imports import *
-
-
-# TODO: something with the dates format, possibly change them to days??
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+# os and datetime are in constants
+from cirilib.constants import *
 
 
 def pull_data(selected_data, selected_region, process=True, state=None, drop_fips=True, date_as_index=False):
@@ -75,7 +76,7 @@ def date_to_iso(date_us_with_slash: str):  # /!\ Cannot take years before 2000. 
     return year + "-" + month.zfill(2) + "-" + day.zfill(2)
 
 
-def lockdown_split(date_of_lockdown, selected_data=None, country=None):
+def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=False):
     """
     index_country   | cases before  | deaths before | growth rate | AND
                     | cases after   | deaths before | growth rate |
@@ -127,6 +128,11 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None):
 
         pbar.update(1)
     pbar.close()
+
+    if to_csv:
+        df_before.to_csv(os.path.join(CSV_DIR, "before_" + date_of_lockdown), index=False)
+        df_after.to_csv(os.path.join(CSV_DIR, "after_" + date_of_lockdown), index=False)
+
     return df_before, df_after
 
 

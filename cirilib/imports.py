@@ -1,10 +1,11 @@
 from cirilib.constants import *
+from data_extracion import *
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 # import prince
-# import sklearn as sk
+import sklearn as sk
 # import tabula
 
 import numpy as np
