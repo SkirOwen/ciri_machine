@@ -23,21 +23,12 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
 
     for i in range(2):
         df = df_before_after[i]
-        deleted_row = df[df["Country"] == omitted_country].index
-        df = df.drop(deleted_row)
+        deleted_row = df[df["Country"] == omitted_country]
+        deleted_row_index = deleted_row.index
+        df = df.drop(deleted_row_index)
 
         print("DATABASE OVERVIEW :")
         print(df.head)
-
-        # Plot the data
-        # plt.subplot(221)
-        # plt.scatter(df['Infections'],df['Deces'],c='b')
-        # plt.title("$Représentation$ $2D$ $de$ $la$ $BDD$")
-        # plt.xlabel('$Nombre$ $de$ $cas$ $infectés$')
-        # plt.ylabel('$Nombre$ $de$ $morts$')
-
-        # Let k assume a value
-        # k = 3
 
         # Create an instance of the KMeans class with a cluster size of 3
         kmeans = KMeans(n_clusters=k)
@@ -90,13 +81,13 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
         # Testing part for FRANCE
         # Making predictions
         print("**********************************************************************")
-        Cases = 4501
-        Deaths = 91
-        print("PREDICTION FOR FRANCE", before_after[i][1:-2],  lockdown_date, ":")
+        Cases = deleted_row.iloc[0]["Cases"]
+        Deaths = deleted_row.iloc[0]["Deaths"]
+        print("PREDICTION FOR", omitted_country.upper(), before_after[i][1:-2],  lockdown_date, ":")
         print("Cases:", Cases)
         print("Dead:", Deaths)
         cluster = kmeans.predict([[Cases, Deaths]])[0]
-        plt.scatter(Cases, Deaths, c='#fac205')
+        ax[i].scatter(Cases, Deaths, c='#fac205')
         print("Cluster : ", flatui[cluster])
         print("**********************************************************************")
         if not created:
@@ -109,4 +100,4 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
 if __name__ == "__main__":
     # lockdown_date in format iso: YYYY-MM-DD
     lockdown_date = "2020-03-15"
-    clustering(lockdown_date, backend="sns")
+    clustering(lockdown_date, backend="plt")
