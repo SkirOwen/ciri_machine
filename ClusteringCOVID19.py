@@ -91,7 +91,8 @@ def clustering(lockdown_date, k=3, backend="sns"):
         # Print out the clusters to which point belongs
         print("CLUSTERS TO WHICH POINT BELONGS :")
         for i, labels in enumerate(labels):
-            print(Countries[i] + str(X[i]), "Cluster " + str(int(labels)))
+            spacing = "\t" * 2 * int(labels)
+            print(spacing + "|" + Countries[i].ljust(32) + str(X[i]).ljust(17) + " Cluster " + str(int(labels)) + "|")
 
         # Before was the training part
         # Testing part for FRANCE
