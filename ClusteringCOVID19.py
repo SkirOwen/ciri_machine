@@ -76,7 +76,7 @@ def clustering(lockdown_date, k=3, backend="sns"):
         else:
             clarity_ranking = COUNTRIES
             sns.scatterplot(x="Cases", y="Deaths", hue="Country", palette="ch:r=-.2,d=.3_r", size="Growth Factor",
-                            hue_order=clarity_ranking, data=df, ax=ax[i]).legend_.remove()
+                            hue_order=clarity_ranking, sizes=(10, 75), data=df, ax=ax[i]).legend_.remove()
 
         # Print out the clusters to which point belongs
         print("CLUSTERS TO WHICH POINT BELONGS TO :")
@@ -107,4 +107,4 @@ def clustering(lockdown_date, k=3, backend="sns"):
 if __name__ == "__main__":
     # lockdown_date in format iso: YYYY-MM-DD
     lockdown_date = "2020-03-15"
-    clustering(lockdown_date, backend="plt")
+    clustering(lockdown_date, backend="sns")
