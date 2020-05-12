@@ -90,9 +90,9 @@ def clustering(lockdown_date, k=3, backend="sns"):
 
         # Print out the clusters to which point belongs
         print("CLUSTERS TO WHICH POINT BELONGS :")
-        for i, labels in enumerate(labels):
+        for j, labels in enumerate(labels):
             spacing = "\t" * 2 * int(labels)
-            print(spacing + "|" + Countries[i].ljust(32) + str(X[i]).ljust(17) + " Cluster " + str(int(labels)) + "|")
+            print(spacing + "|" + Countries[j].ljust(32) + str(X[j]).ljust(17) + " Cluster " + str(int(labels)) + "|")
 
         # Before was the training part
         # Testing part for FRANCE
@@ -100,9 +100,9 @@ def clustering(lockdown_date, k=3, backend="sns"):
         print("**********************************************************************")
         Cases = 4501
         Deaths = 91
-        print("PREDICTION FOR FRANCE before", lockdown_date, ":")
-        print("Infected : 4501")
-        print("Dead : 91")
+        print("PREDICTION FOR FRANCE", before_after[i][1:-2],  lockdown_date, ":")
+        print("Cases:", Cases)
+        print("Dead:", Deaths)
         cluster = kmeans.predict([[Cases, Deaths]])[0]
         plt.scatter(Cases, Deaths, c='#fac205')
         print("Cluster : ", flatui[cluster])
