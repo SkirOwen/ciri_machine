@@ -77,3 +77,6 @@ clustering(lockdown_date, k=3, backend="sns")
 Create clustering from the data from `lockdown_split` and ouptut a graph  
 `k` number of cluster  
 `backend` ploting backend `plt` or `sns` *`sns` does not yet configured for colours from clustering, recommand using `plt` for now*  
+
+![alt text](https://github.com/SkirOwen/ciri_machime/logo/graph_plt.png "Graph with plt")  
+![alt text](https://github.com/SkirOwen/ciri_machime/logo/graph_sns.png "Graph with sns")
