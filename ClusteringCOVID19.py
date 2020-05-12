@@ -6,7 +6,7 @@ sns.set(style="whitegrid")
 style.use("bmh")
 
 
-def clustering(lockdown_date, k=3, backend="sns"):
+def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
     before_after = ["$before$ ", "$after$ "]
 
     try:
@@ -23,6 +23,8 @@ def clustering(lockdown_date, k=3, backend="sns"):
 
     for i in range(2):
         df = df_before_after[i]
+        deleted_row = df[df["Country"] == omitted_country].index
+        df = df.drop(deleted_row)
 
         print("DATABASE OVERVIEW :")
         print(df.head)
