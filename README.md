@@ -67,6 +67,9 @@ Example of one of the two dataframe (`"after_2020-03-15.csv`, generated on the `
 | "Albania"     | 26855  | 1156   | 1.13824134829 |
 | "Algeria"     | 129216 | 14775  | 1.32983989418 |
 
+<img src="https://github.com/SkirOwen/ciri_machine/blob/master/logo/growth_factor.png" width="200"></img>  
+`N` is the number of new cases on the day `d`  
+
 ### ClusteringCOVID19
 #### clustering
 
@@ -78,5 +81,12 @@ Create clustering from the data from `lockdown_split` and ouptut a graph
 `k` number of cluster  
 `backend` ploting backend `plt` or `sns` *(`sns` does not yet configured for colours from clustering, recommand using `plt` for now)*  
 
+Graph with plt:  
 ![alt text](https://github.com/SkirOwen/ciri_machine/blob/master/logo/graph_plt.png "Graph with plt")  
+
+Graph with sns:    
 ![alt text](https://github.com/SkirOwen/ciri_machine/blob/master/logo/graph_sns.png "Graph with sns")
+
+### Report PDF
+
+[Report](https://github.com/SkirOwen/ciri_machine/blob/master/logo/ciri.pdf)  
