@@ -74,12 +74,13 @@ Example of one of the two dataframe (`"after_2020-03-15.csv`, generated on the `
 #### clustering
 
 ```python
-clustering(lockdown_date, k=3, backend="sns")
+clustering(lockdown_date, k=3, omitted_country="France", backend="sns")
 ``` 
 
 Create clustering from the data from `lockdown_split` and ouptut a graph  
 `k` number of cluster  
 `backend` ploting backend `plt` or `sns` *(`sns` does not yet configured for colours from clustering, recommand using `plt` for now)*  
+`omitted_country` is the country you want to test and as to be omitted from the training (value stored in `delted_row`)  
 
 Graph with plt:  
 ![alt text](https://github.com/SkirOwen/ciri_machine/blob/master/logo/graph_plt.png "Graph with plt")  
