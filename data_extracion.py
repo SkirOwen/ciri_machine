@@ -65,7 +65,7 @@ def process_data(df, selected_region, *args):
     dates = list(df.iloc[0:0, k_d:])
     dates_iso = [date_to_iso(i) for i in dates]
 
-    return pd.DataFrame(data={"date": dates_iso, "region": region.values[0][k:]}, dtype=np.int64)
+    return pd.DataFrame(data={"date": dates_iso, "cases": region.values[0][k:]}, dtype=np.int64)
 
 
 def date_to_iso(date_us_with_slash: str):  # /!\ Cannot take years before 2000. reversed 2k bug ;)

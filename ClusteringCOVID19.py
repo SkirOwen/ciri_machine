@@ -79,7 +79,7 @@ def clustering(lockdown_date, k=3, backend="sns"):
                             hue_order=clarity_ranking, data=df, ax=ax[i]).legend_.remove()
 
         # Print out the clusters to which point belongs
-        print("CLUSTERS TO WHICH POINT BELONGS :")
+        print("CLUSTERS TO WHICH POINT BELONGS TO :")
         for j, labels in enumerate(labels):
             spacing = "\t" * 2 * int(labels)
             print(spacing + "|" + Countries[j].ljust(32) + str(X[j]).ljust(17) + " Cluster " + str(int(labels)) + "|")
