@@ -78,5 +78,5 @@ Create clustering from the data from `lockdown_split` and ouptut a graph
 `k` number of cluster  
 `backend` ploting backend `plt` or `sns` *(`sns` does not yet configured for colours from clustering, recommand using `plt` for now)*  
 
-![alt text](https://github.com/SkirOwen/ciri_machine/logo/graph_plt.png "Graph with plt")  
-![alt text](https://github.com/SkirOwen/ciri_machine/logo/graph_sns.png "Graph with sns")
+![alt text](https://github.com/SkirOwen/ciri_machine/blob/master/logo/graph_plt.png "Graph with plt")  
+![alt text](https://github.com/SkirOwen/ciri_machine/blob/master/logo/graph_sns.png "Graph with sns")
