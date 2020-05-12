@@ -14,9 +14,12 @@ pip3 install -r requirements.txt
 ```
 ## Data Sources
 US data come from     [NYTimes](https://github.com/nytimes/covid-19-data)  
-Non-US data come from [(CSSE) Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19)
+Non-US data come from [(CSSE) Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19)  
+Thanks to both of them!
 
-## pull_data
+## Using cirilib
+### data_extraction
+#### pull_data
 
 ```python
 pull_data(selected_data, selected_region, process=True, state=None, drop_fips=True, date_as_index=False)
@@ -44,7 +47,7 @@ If `selected_data = None` then the output will be, for the selected country/regi
 | 2020-01-22  | 1     | 0      |
 | 2020-01-23  | 1     | 0      |
 
-## lockdown_split
+#### lockdown_split
 
 ```python
 lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=False)
@@ -56,7 +59,7 @@ Create two `dateframes`, one from day:0 to the `date_of_lockdown`(excl.) and one
 `country` specific country/region (no states) if `None` than do it for all of them  
 `to_csv` output to a csv in `./dataset/csv_report` with the name `"before/after_" + date_of_lockdown + ".csv"`
 
-Example of one of the two dataframe (`"after_2020-03-15.csv`, generated on the 2020-05-12):  
+Example of one of the two dataframe (`"after_2020-03-15.csv`, generated on the `2020-05-12`):  
 
 | Country       | Cases  | Deaths | Growth Factor |
 | --------------|:------:| ------:| -------------:|
@@ -64,5 +67,13 @@ Example of one of the two dataframe (`"after_2020-03-15.csv`, generated on the 2
 | "Albania"     | 26855  | 1156   | 1.13824134829 |
 | "Algeria"     | 129216 | 14775  | 1.32983989418 |
 
+### ClusteringCOVID19
+#### clustering
 
+```python
+clustering(lockdown_date, k=3, backend="sns")
+``` 
 
+Create clustering from the data from `lockdown_split` and ouptut a graph  
+`k` number of cluster  
+`backend` ploting backend `plt` or `sns` *`sns` does not yet configured for colours from clustering, recommand using `plt` for now*  
