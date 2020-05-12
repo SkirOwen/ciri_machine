@@ -42,6 +42,10 @@ url_jh_cases = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master
 url_jh_deaths = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data" \
                 "/csse_covid_19_time_series/time_series_covid19_deaths_global.csv "
 
+WARNING_OLD_CSV = """
+\33[3m\33[93m The data has been extracted from already existing files, consider regenerating them! \33[0m
+"""
+
 WARNING_CHECK_MESSAGE = """
 Everything seems to be good!
 Though, this only check if there are the same number of report then days since 21 Jan 2020.

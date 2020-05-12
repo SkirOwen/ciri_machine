@@ -13,8 +13,9 @@ def clustering(lockdown_date, k=3, backend="sns"):
         df1 = pd.read_csv(os.path.join(CSV_DIR, "before_" + lockdown_date + ".csv"))
         df2 = pd.read_csv(os.path.join(CSV_DIR, "after_" + lockdown_date + ".csv"))
         df_before_after = (df1, df2)
-        print("\33[31m", "The data has been extracted from already existing files, consider regenerating them!", "\33[0m")
+        created = False
     except FileNotFoundError:
+        created = True
         df_before_after = lockdown_split(lockdown_date, to_csv=True)
 
     fig, ax = plt.subplots(ncols=2)
@@ -96,6 +97,8 @@ def clustering(lockdown_date, k=3, backend="sns"):
         plt.scatter(Cases, Deaths, c='#fac205')
         print("Cluster : ", flatui[cluster])
         print("**********************************************************************")
+        if not created:
+            print(WARNING_OLD_CSV)
 
     plt.show()
     return
