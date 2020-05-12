@@ -20,7 +20,7 @@ def pull_data(selected_data, selected_region, process=True, state=None, drop_fip
             df2 = pd.read_csv(url)
             df2 = process_data(df2, selected_region)
 
-            df_processed = df1.assign(deaths=df2.region)
+            df_processed = df1.assign(deaths=df2.selected_data)
 
         else:
             print("Please select either 'Confirmed Cases' or 'Reported Deaths'")
@@ -65,7 +65,7 @@ def process_data(df, selected_region, *args):
     dates = list(df.iloc[0:0, k_d:])
     dates_iso = [date_to_iso(i) for i in dates]
 
-    return pd.DataFrame(data={"date": dates_iso, "cases": region.values[0][k:]}, dtype=np.int64)
+    return pd.DataFrame(data={"date": dates_iso, "selected_data": region.values[0][k:]}, dtype=np.int64)
 
 
 def date_to_iso(date_us_with_slash: str):  # /!\ Cannot take years before 2000. reversed 2k bug ;)
@@ -93,11 +93,11 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=Fa
 
         lockdown_index = df.date[df.date == date_of_lockdown].index.tolist()[0]
 
-        cases_before = df.iloc[:lockdown_index, 1].sum()
-        cases_after = df.iloc[lockdown_index:, 1].sum()
+        cases_before = df.iloc[:lockdown_index, 1][lockdown_index-1]
+        cases_after = df.iloc[lockdown_index:, 1][len(df)-1]
 
-        deaths_before = df.iloc[:lockdown_index, 2].sum()
-        deaths_after = df.iloc[lockdown_index:, 2].sum()
+        deaths_before = df.iloc[:lockdown_index, 2][lockdown_index-1] - df.iloc[:lockdown_index, 1][lockdown_index-1]
+        deaths_after = df.iloc[lockdown_index:, 2][len(df)-1] - df.iloc[lockdown_index:, 1][len(df)-1]
 
         growth_rate_before = []
         growth_rate_after = []
