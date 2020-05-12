@@ -21,8 +21,8 @@ def clustering(lockdown_date, k=3, backend="sns"):
     before_after = ["$before$ ", "$after$ "]
 
     try:
-        df1 = pd.read_csv(os.path.join(CSV_DIR, "before_" + lockdown_date))
-        df2 = pd.read_csv(os.path.join(CSV_DIR, "after_" + lockdown_date))
+        df1 = pd.read_csv(os.path.join(CSV_DIR, "before_" + lockdown_date + ".csv"))
+        df2 = pd.read_csv(os.path.join(CSV_DIR, "after_" + lockdown_date + ".csv"))
         df_before_after = (df1, df2)
         print("\33[31m", "The data has been extracted from already existing files, consider regenerating them!", "\33[0m")
     except FileNotFoundError:
@@ -190,4 +190,4 @@ def clustering(lockdown_date, k=3, backend="sns"):
 
 
 if __name__ == "__main__":
-    clustering(lockdown_date)
+    clustering(lockdown_date, backend="plt")

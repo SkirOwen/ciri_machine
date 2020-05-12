@@ -130,14 +130,14 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=Fa
     pbar.close()
 
     if to_csv:
-        df_before.to_csv(os.path.join(CSV_DIR, "before_" + date_of_lockdown), index=False)
-        df_after.to_csv(os.path.join(CSV_DIR, "after_" + date_of_lockdown), index=False)
+        df_before.to_csv(os.path.join(CSV_DIR, "before_" + date_of_lockdown + ".csv"), index=False)
+        df_after.to_csv(os.path.join(CSV_DIR, "after_" + date_of_lockdown + ".csv"), index=False)
 
     return df_before, df_after
 
 
 if __name__ == "__main__":
-    test = lockdown_split("2020-03-10")
+    test = lockdown_split("2020-03-15", to_csv=True)
     print(test[0])
     print(test[1])
 
