@@ -4,7 +4,6 @@ from data_extracion import *
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-# import prince
 import sklearn as sk
 # import tabula
 
@@ -21,5 +20,4 @@ import sys
 import time
 
 from tqdm import tqdm
-# from PIL import Image
-# from colour import Color
+
