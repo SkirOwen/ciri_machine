@@ -11,7 +11,7 @@ url_who = c.url_who
 PDF_DIR = c.PDF_DIR
 
 
-# TODO: get name of last downloaded, to pass to export_from_pdf
+# MAYBETODO: get name of last downloaded, to pass to export_from_pdf
 
 
 def get_link_sitrep_who(url=url_who):

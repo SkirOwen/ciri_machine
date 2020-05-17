@@ -5,7 +5,6 @@ from matplotlib import style
 sns.set(style="whitegrid")
 style.use("bmh")
 
-# TODO: gorwth factor changed test and plot somehow ?????
 
 
 def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
