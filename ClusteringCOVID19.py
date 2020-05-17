@@ -5,6 +5,8 @@ from matplotlib import style
 sns.set(style="whitegrid")
 style.use("bmh")
 
+# TODO: gorwth factor changed test and plot somehow ?????
+
 
 def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
     before_after = ["$before$ ", "$after$ "]
@@ -22,7 +24,7 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
     fig.subplots_adjust(hspace=0.5)
 
     for i in range(2):
-        df = df_before_after[i]
+        df = df_before_after[i].dropna()
         deleted_row = df[df["Country"] == omitted_country]
         deleted_row_index = deleted_row.index
         df = df.drop(deleted_row_index)
@@ -35,7 +37,7 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
 
         # Create a matrix containing all points
         Countries = list(df['Country'])
-        X = np.array(list(zip(df['Cases'], df['Deaths'])))
+        X = np.array(list(zip(df['Cases'], df['New Cases'])))
 
         # Train the model
         kmeans = kmeans.fit(X)
@@ -63,8 +65,8 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
             ax[i].set(title=("$State$ " + before_after[i] + lockdown_date), xlabel="$Confirmed$ $Cases$",
                       ylabel="$Reported$ $Deaths$")
 
-            ax[i].scatter(df['Cases'], df['Deaths'], c=colors)
-            ax[i].scatter(Centroids[:, 0], Centroids[:, 1], marker='*', c='black', s=20)
+            ax[i].scatter(np.log(df['Cases']), np.log(df['New Cases']), c=colors)
+            ax[i].scatter(np.log(Centroids[:, 0]), np.log(Centroids[:, 1]), marker='*', c='black', s=20)
 
         else:
             clarity_ranking = COUNTRIES
@@ -80,16 +82,16 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
         # Before was the training part
         # Testing part for FRANCE
         # Making predictions
-        print("**********************************************************************")
-        Cases = deleted_row.iloc[0]["Cases"]
-        Deaths = deleted_row.iloc[0]["Deaths"]
+        print("----------------------------------------------------------------------")
+        Cases = np.log(deleted_row.iloc[0]["Cases"])
+        Deaths = np.log(deleted_row.iloc[0]["New Cases"])
         print("PREDICTION FOR", omitted_country.upper(), before_after[i][1:-2],  lockdown_date, ":")
         print("Cases:", Cases)
         print("Dead:", Deaths)
         cluster = kmeans.predict([[Cases, Deaths]])[0]
         ax[i].scatter(Cases, Deaths, c='#fac205')
         print("Cluster : ", flatui[cluster])
-        print("**********************************************************************")
+        print("----------------------------------------------------------------------")
         if not created:
             print(WARNING_OLD_CSV)
 
@@ -99,5 +101,5 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
 
 if __name__ == "__main__":
     # lockdown_date in format iso: YYYY-MM-DD
-    lockdown_date = "2020-03-15"
+    lockdown_date = "2020-04-15"
     clustering(lockdown_date, backend="plt")

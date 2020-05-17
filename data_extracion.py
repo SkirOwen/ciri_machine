@@ -82,49 +82,59 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=Fa
                     | cases after   | deaths before | growth rate |
     """
     country = COUNTRIES if country is None else [country]
-    df_before = pd.DataFrame(columns=["Country", "Cases", "Deaths", "Growth Factor"])
-    df_after = pd.DataFrame(columns=["Country", "Cases", "Deaths", "Growth Factor"])
+    df_before = pd.DataFrame(columns=["Country", "Cases", "Deaths", "Growth Factor", "New Cases"])
+    df_after = pd.DataFrame(columns=["Country", "Cases", "Deaths", "Growth Factor", "New Cases"])
 
     pbar = tqdm(country)
     for name in country:
-        pbar.set_description("Processing %s" % name)
+        pbar.set_description("Processing " + name.ljust(24))
 
         df = pull_data(selected_data, name)
 
         lockdown_index = df.date[df.date == date_of_lockdown].index.tolist()[0]
 
         cases_before = df.iloc[:lockdown_index, 1][lockdown_index-1]
-        cases_after = df.iloc[lockdown_index:, 1][len(df)-1]
+        cases_after = df.iloc[lockdown_index:, 1][len(df)-1] - df.iloc[:lockdown_index, 1][lockdown_index-1]
 
-        deaths_before = df.iloc[:lockdown_index, 2][lockdown_index-1] - df.iloc[:lockdown_index, 1][lockdown_index-1]
-        deaths_after = df.iloc[lockdown_index:, 2][len(df)-1] - df.iloc[lockdown_index:, 1][len(df)-1]
+        deaths_before = df.iloc[:lockdown_index, 2][lockdown_index-1]
+        deaths_after = df.iloc[lockdown_index:, 2][len(df)-1] - df.iloc[:lockdown_index, 2][lockdown_index-1]
 
         growth_rate_before = []
         growth_rate_after = []
 
+        new_cases_before = [((df.iloc[:lockdown_index, 1])[0]),
+                            ((df.iloc[:lockdown_index, 1])[1]) - ((df.iloc[:lockdown_index, 1])[0])]
+        new_cases_after = []
+
         for i in range(2, lockdown_index):
             delta_n_d = ((df.iloc[:lockdown_index, 1])[i]) - ((df.iloc[:lockdown_index, 1])[i - 1])
+            new_cases_before.append(delta_n_d)
             delta_n_d1 = ((df.iloc[:lockdown_index, 1])[i - 1]) - ((df.iloc[:lockdown_index, 1])[i - 2])
-            if np.isinf(delta_n_d / delta_n_d1) or np.isnan(delta_n_d / delta_n_d1):
+            if np.isinf(delta_n_d / delta_n_d1) or np.isnan(delta_n_d / delta_n_d1) or (delta_n_d / delta_n_d1) < 0:
                 continue
             growth_rate_before.append(delta_n_d / delta_n_d1)
 
         for i in range(lockdown_index, len(df)):
             delta_n_d = ((df.iloc[lockdown_index - 2:, 1])[i]) - ((df.iloc[lockdown_index - 2:, 1])[i - 1])
+            new_cases_after.append(delta_n_d)
             delta_n_d1 = ((df.iloc[lockdown_index - 2:, 1])[i - 1]) - ((df.iloc[lockdown_index - 2:, 1])[i - 2])
-            if np.isinf(delta_n_d / delta_n_d1) or np.isnan(delta_n_d / delta_n_d1):
+            if delta_n_d1 == 0 or np.isnan(delta_n_d / delta_n_d1) or (delta_n_d / delta_n_d1) < 0:
                 continue
             growth_rate_after.append(delta_n_d / delta_n_d1)
 
         growth_rate_before_mean = np.nanmean(growth_rate_before)
         growth_rate_after_mean = np.nanmean(growth_rate_after)
 
-        a = pd.DataFrame([[name, cases_before, deaths_before, growth_rate_before_mean]],
-                         columns=["Country", "Cases", "Deaths", "Growth Factor"])
+        new_cases_before = np.nanmean(new_cases_before)
+        new_cases_after = np.nanmean(new_cases_after)
+
+        a = pd.DataFrame([[name, cases_before, deaths_before, growth_rate_before_mean, new_cases_before]],
+                         columns=["Country", "Cases", "Deaths", "Growth Factor", "New Cases"])
 
         df_before = df_before.append(a, ignore_index=True)
-        df_after = df_after.append(pd.DataFrame([[name, cases_after, deaths_after, growth_rate_after_mean]],
-                                     columns=["Country", "Cases", "Deaths", "Growth Factor"]), ignore_index=True)
+        df_after = df_after.append(pd.DataFrame([[name, cases_after, deaths_after, growth_rate_after_mean, new_cases_after]],
+                                                columns=["Country", "Cases", "Deaths", "Growth Factor", "New Cases"]),
+                                   ignore_index=True)
 
         pbar.update(1)
     pbar.close()
@@ -137,11 +147,14 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=Fa
 
 
 if __name__ == "__main__":
-    test = lockdown_split("2020-03-15", to_csv=True)
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    test = lockdown_split("2020-04-15", to_csv=True)
     print(test[0])
     print(test[1])
 
-    # df = pull_data("Confirmed Cases", "Italy")
+    # df = pull_data("Confirmed Cases", "France", date_as_index=True)
     # dfm = pull_data("Reported Deaths", "Italy")
     # dfuk = pull_data("Confirmed Cases", "UK")
     # print(df)
