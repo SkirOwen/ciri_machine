@@ -5,9 +5,49 @@ from matplotlib import style
 sns.set(style="whitegrid")
 style.use("bmh")
 
+# TODO: seems to be something wrong with the data
 
+def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_country="France", graph_type="loglog",
+               backend="plt", doubling=1):
+    """
+    Create and plot clustering using kmeans using the pd.DataFrame from data_extraction.lockdown_split function.
+    Print =data= for 'omitted_country' with the predicted cluster ???
 
-def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
+    Parameters
+    ----------
+    lockdown_date : str
+                    Date in ISO format: YYYY-MM-DD
+    x_ax : {'Cases', 'Deaths', 'Growth Factor', 'New Cases'}, optional
+           x axis values for the graph (the default is 'Cases')
+    y_ax : {'Cases', 'Deaths', 'Growth Factor', 'New Cases'}, optional
+           y axis values for the graph (the default is 'New Cases')
+    k : int, optional
+        Number of clusters (the default is 3)
+    omitted_country : str, optional
+                      (the default is 'France')
+    graph_type : {'linear', 'semilog', 'logsemi', 'loglog'}, optional
+                 type of graph representation (logsemi is where x is linear and y is log) (the default is 'loglog')
+    backend : {'plt', 'sns'} , optional
+              type of graph, 'plt' for matplotlib.pyplot, 'sns' for seaborn (the default is 'plt')
+    doubling : int, optional
+               number to change the 'doubling' day time of confirmed cases (the default is 2)
+
+    Yields
+    ------
+    plt.subplot
+
+    Warnings
+    --------
+    Seaborn is not fully implemented yet, better to use backend='plt'
+    """
+    graph_types = ["linear", "semilogx", "semilogy", "loglog"]
+    if graph_type not in graph_types:
+        raise ValueError("Invalid graph type. Expected one of: %s" % graph_types)
+
+    axis_types = ["Cases", "Deaths", "Growth Factor", "New Cases"]
+    if x_ax not in axis_types or y_ax not in axis_types:
+        raise ValueError("Invalid axis type. Expected one of: %s" % axis_types)
+
     before_after = ["$before$ ", "$after$ "]
 
     try:
@@ -36,7 +76,7 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
 
         # Create a matrix containing all points
         Countries = list(df['Country'])
-        X = np.array(list(zip(df['Cases'], df['New Cases'])))
+        X = np.array(list(zip(df[x_ax], df[y_ax])))
 
         # Train the model
         kmeans = kmeans.fit(X)
@@ -48,12 +88,29 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
         Centroids = kmeans.cluster_centers_
 
         # Print the clusters label and centroids
-        print("LABELS :")
+        print("LABELS: ")
         print(labels)
-        print("CENTROIDS LOCATIONS :")
+        print("CENTROIDS LOCATIONS: ")
         print(Centroids)
 
         flatui = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"]
+
+        # setting the graph type
+        if graph_type == "linear":
+            x_scale = "linear"
+            y_scale = "linear"
+
+        elif graph_type == "semilogx":
+            x_scale = "log"
+            y_scale = "linear"
+
+        elif graph_type == "semilogy":
+            x_scale = "linear"
+            y_scale = "log"
+
+        else:  # graph_type == "loglog"
+            x_scale = "log"
+            y_scale = "log"
 
         if backend == "plt":
             # Plot the points and centroids on a scatter plot
@@ -61,15 +118,24 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
 
             colors = [flatui[i] for i in labels]
 
-            ax[i].set(title=("$State$ " + before_after[i] + lockdown_date), xlabel="$Confirmed$ $Cases$",
-                      ylabel="$Reported$ $Deaths$")
+            ax[i].set(title=("$State$ " + before_after[i] + "$" + lockdown_date + "$"), xlabel="$" + x_ax + "$",
+                      ylabel="$" + y_ax + "$")
 
-            ax[i].scatter(np.log(df['Cases']), np.log(df['New Cases']), c=colors)
-            ax[i].scatter(np.log(Centroids[:, 0]), np.log(Centroids[:, 1]), marker='*', c='black', s=20)
+            ax[i].scatter(df[x_ax], df[y_ax], c=colors)
+            ax[i].scatter(Centroids[:, 0], Centroids[:, 1], marker='*', c='black', s=20)
+            # for r, txt in enumerate(Countries):
+            #     ax[i].annotate(txt, (list(df[x_ax])[r], list(df[y_ax])[r]))
+
+            if x_ax == "Cases" and y_ax == "New Cases":
+                ax[i].plot([k * (1 - pow(2, -7 / doubling)) for k in range(0, 1000000)], '--', color='grey',
+                           label=(doubling, 'Day Doubling Time of Confirmed Cases'))
+            ax[i].set_xscale(x_scale)
+            ax[i].set_yscale(y_scale)
 
         else:
+            # doesn't do everything better to use plt
             clarity_ranking = COUNTRIES
-            sns.scatterplot(x="Cases", y="Deaths", hue="Country", palette="ch:r=-.2,d=.3_r", size="Growth Factor",
+            sns.scatterplot(x=df[x_ax], y=df[y_ax], hue="Country", palette="ch:r=-.2,d=.3_r", size="Growth Factor",
                             hue_order=clarity_ranking, sizes=(10, 75), data=df, ax=ax[i]).legend_.remove()
 
         # Print out the clusters to which point belongs
@@ -79,16 +145,17 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
             print(spacing + "|" + Countries[j].ljust(32) + str(X[j]).ljust(17) + " Cluster " + str(int(labels)) + "|")
 
         # Before was the training part
-        # Testing part for FRANCE
+        # Testing part for omitted_country
         # Making predictions
         print("----------------------------------------------------------------------")
-        Cases = np.log(deleted_row.iloc[0]["Cases"])
-        Deaths = np.log(deleted_row.iloc[0]["New Cases"])
+        # TODO: this is not a prediction at all!
         print("PREDICTION FOR", omitted_country.upper(), before_after[i][1:-2],  lockdown_date, ":")
-        print("Cases:", Cases)
-        print("Dead:", Deaths)
-        cluster = kmeans.predict([[Cases, Deaths]])[0]
-        ax[i].scatter(Cases, Deaths, c='#fac205')
+        x_value = deleted_row.iloc[0][x_ax]
+        y_value = deleted_row.iloc[0][y_ax]
+        print(x_ax + ":", x_value)
+        print(y_ax + ":", y_value)
+        cluster = kmeans.predict([[x_value, y_value]])[0]
+        ax[i].scatter(x_value, y_value, c='#fac205')
         print("Cluster : ", flatui[cluster])
         print("----------------------------------------------------------------------")
         if not created:
@@ -99,6 +166,5 @@ def clustering(lockdown_date, k=3, omitted_country="France", backend="sns"):
 
 
 if __name__ == "__main__":
-    # lockdown_date in format iso: YYYY-MM-DD
     lockdown_date = "2020-04-15"
-    clustering(lockdown_date, backend="plt")
+    clustering(lockdown_date, backend="plt", graph_type="loglog")
