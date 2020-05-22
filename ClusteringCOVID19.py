@@ -5,8 +5,6 @@ from matplotlib import style
 sns.set(style="whitegrid")
 style.use("bmh")
 
-# TODO: fix the issue of scale for plt in log scale
-
 
 def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases", y_ax="New Cases", k=3,
                omitted_country="France", graph_type="log", backend="plt", doubling=2, **kwargs):
@@ -154,8 +152,8 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
                            '--', color='grey', label=(doubling, 'Day Doubling Time of Confirmed Cases'))
             ax[i].set_xscale(x_scale)
             ax[i].set_yscale(y_scale)
-            # ax[i].set_xlim(auto=True)
-            # ax[i].set_ylim(auto=True)
+            ax[i].set_xlim(np.min(df[x_ax]))
+            ax[i].set_ylim(0.01)
 
         else:
             # doesn't do everything, better to use plt
