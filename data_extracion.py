@@ -275,7 +275,7 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, drop_no_lc=False,
 
 if __name__ == "__main__":
     lockdown_date = "2020-03-17"
-    test = lockdown_split(lockdown_date, lockdown_by_country=False, drop_no_lc=False, to_csv=True, file_name="lockdown2")
+    test = lockdown_split(lockdown_date, lockdown_by_country=True, drop_no_lc=True, to_csv=True, file_name="lockdown3")
     # print(test[0])
     # print(test[1])
 

@@ -5,6 +5,8 @@ from matplotlib import style
 sns.set(style="whitegrid")
 style.use("bmh")
 
+# TODO: annotate when drop_no_lc is True is wrong
+
 
 def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases", y_ax="New Cases", k=3,
                omitted_country="France", graph_type="log", backend="plt", doubling=2, **kwargs):
@@ -142,7 +144,7 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
             ax[i].scatter(Centroids[:, 0], Centroids[:, 1], marker='*', c='black', s=20)
             if label_countries:
                 for r, txt in enumerate(Countries):
-                    ax[i].annotate(txt, (list(df[x_ax])[r], list(df[y_ax])[r]), size=5)
+                    ax[i].annotate(txt, (list(df[x_ax])[r], list(df[y_ax])[r]), size=10)
 
             if (x_ax == "Cases" or x_ax == "Deaths") and (y_ax == "New Cases" or
                                                           y_ax == "New Deaths") and (graph_type == "log" or
@@ -190,6 +192,6 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
 
 if __name__ == "__main__":
     lockdown = "2020-03-17"
-    name = "lockdown2"
+    name = "lockdown3"
     clustering(lockdown, name, label_countries=False, x_ax="Cases", y_ax="New Cases", backend="plt",
                graph_type="log", kwargs={})
