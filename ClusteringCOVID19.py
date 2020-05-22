@@ -5,6 +5,8 @@ from matplotlib import style
 sns.set(style="whitegrid")
 style.use("bmh")
 
+# TODO: fix the issue of scale for plt in log scale
+
 
 def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases", y_ax="New Cases", k=3,
                omitted_country="France", graph_type="log", backend="plt", doubling=2, **kwargs):
