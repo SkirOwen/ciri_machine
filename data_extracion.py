@@ -130,7 +130,7 @@ def date_to_iso(date_us_with_slash: str):  # /!\ Cannot take years before 2000. 
 
 
 def lockdown_split(date_of_lockdown, lockdown_by_country=True, drop_no_lc=False, selected_data=None, country=None, to_csv=False,
-                   file_name=None):
+                   file_name=None, data_split_before=False):
     """
     Create two DataFrames, one before and up to date_of_lockdown (not included), one after up to now (included) (or end
     of the outbreak).
@@ -156,6 +156,9 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, drop_no_lc=False,
                 specify the name of the file to export to with the prefix 'before_' and 'after_',
                 if None then the name is: before_'date_of_lockdown'.csv and after_'date_of_lockdown'.csv
                 (the default is None)
+    data_split_before : bool, optional
+                        if True after the data after is only from the date of the lockdown, whereas if False it
+                        is from the beginning (the default is False)
 
     Returns
     -------
@@ -187,12 +190,15 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, drop_no_lc=False,
         death_lst = df.iloc[:, 2]
 
         cases_before = cases_lst[lockdown_index - 1]
-        cases_after = cases_lst[len(df) - 1]
-                      # - cases_lst[lockdown_index - 1]
-
         deaths_before = death_lst[lockdown_index - 1]
-        deaths_after = death_lst[len(df) - 1]
-                       # - death_lst[lockdown_index - 1]
+
+        if data_split_before:
+            cases_after = cases_lst[len(df) - 1]
+            deaths_after = death_lst[len(df) - 1]
+
+        else:
+            cases_after = cases_lst[len(df) - 1] - cases_lst[lockdown_index - 1]
+            deaths_after = death_lst[len(df) - 1] - death_lst[lockdown_index - 1]
 
         # Initialise growth rate
         growth_rate_before, growth_rate_after = [], []
