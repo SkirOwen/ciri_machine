@@ -190,6 +190,6 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
 
 if __name__ == "__main__":
     lockdown = "2020-03-17"
-    name = "lockdown"
+    name = "lockdown2"
     clustering(lockdown, name, label_countries=False, x_ax="Cases", y_ax="New Cases", backend="plt",
                graph_type="log", kwargs={})
