@@ -7,8 +7,9 @@ style.use("bmh")
 
 # TODO: seems to be something wrong with the data
 
-def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_country="France", graph_type="loglog",
-               backend="plt", doubling=1):
+
+def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omitted_country="France", graph_type="log",
+               backend="plt", doubling=1, **kwarg):
     """
     Create and plot clustering using kmeans using the pd.DataFrame from data_extraction.lockdown_split function.
     Print =data= for 'omitted_country' with the predicted cluster ???
@@ -17,6 +18,8 @@ def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_count
     ----------
     lockdown_date : str
                     Date in ISO format: YYYY-MM-DD
+    csv_name = {"lockdown", lockdown_date}
+               file name of the csv
     x_ax : {'Cases', 'Deaths', 'Growth Factor', 'New Cases'}, optional
            x axis values for the graph (the default is 'Cases')
     y_ax : {'Cases', 'Deaths', 'Growth Factor', 'New Cases'}, optional
@@ -25,12 +28,15 @@ def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_count
         Number of clusters (the default is 3)
     omitted_country : str, optional
                       (the default is 'France')
-    graph_type : {'linear', 'semilog', 'logsemi', 'loglog'}, optional
+    graph_type : {'linear', 'semilog', 'logsemi', 'log'}, optional
                  type of graph representation (logsemi is where x is linear and y is log) (the default is 'loglog')
     backend : {'plt', 'sns'} , optional
               type of graph, 'plt' for matplotlib.pyplot, 'sns' for seaborn (the default is 'plt')
     doubling : int, optional
                number to change the 'doubling' day time of confirmed cases (the default is 2)
+    kwarg : key, value mappings
+            Other keywors arguments are passed down to
+            `data_extraction`
 
     Yields
     ------
@@ -40,7 +46,7 @@ def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_count
     --------
     Seaborn is not fully implemented yet, better to use backend='plt'
     """
-    graph_types = ["linear", "semilogx", "semilogy", "loglog"]
+    graph_types = ["linear", "semilogx", "semilogy", "log"]
     if graph_type not in graph_types:
         raise ValueError("Invalid graph type. Expected one of: %s" % graph_types)
 
@@ -51,13 +57,19 @@ def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_count
     before_after = ["$before$ ", "$after$ "]
 
     try:
-        df1 = pd.read_csv(os.path.join(CSV_DIR, "before_" + lockdown_date + ".csv"))
-        df2 = pd.read_csv(os.path.join(CSV_DIR, "after_" + lockdown_date + ".csv"))
+        df1 = pd.read_csv(os.path.join(CSV_DIR, "before_" + csv_name + ".csv"))
+        df2 = pd.read_csv(os.path.join(CSV_DIR, "after_" + csv_name + ".csv"))
         df_before_after = (df1, df2)
         created = False
     except FileNotFoundError:
         created = True
-        df_before_after = lockdown_split(lockdown_date, to_csv=True)
+        lck_b_ctr = kwarg.get("lockdown_by_country", True)
+        sl_dt = kwarg.get("selected_data", None)
+        ctr = kwarg.get("country", None)
+        t_cs = kwarg.get("to_csv", False)
+        fl_nm = kwarg.get("file_name", None)
+        df_before_after = lockdown_split(lockdown_date, lockdown_by_country=lck_b_ctr, selected_data=sl_dt,
+                                         country=ctr, to_csv=t_cs, file_name=fl_nm)
 
     fig, ax = plt.subplots(ncols=2)
     fig.subplots_adjust(hspace=0.5)
@@ -108,7 +120,7 @@ def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_count
             x_scale = "linear"
             y_scale = "log"
 
-        else:  # graph_type == "loglog"
+        else:  # graph_type == "log"
             x_scale = "log"
             y_scale = "log"
 
@@ -131,6 +143,8 @@ def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_count
                            label=(doubling, 'Day Doubling Time of Confirmed Cases'))
             ax[i].set_xscale(x_scale)
             ax[i].set_yscale(y_scale)
+            ax[i].set_xlim(auto=True)
+            ax[i].set_ylim(auto=True)
 
         else:
             # doesn't do everything better to use plt
@@ -167,4 +181,5 @@ def clustering(lockdown_date, x_ax="Cases", y_ax="New Cases", k=3, omitted_count
 
 if __name__ == "__main__":
     lockdown_date = "2020-04-15"
-    clustering(lockdown_date, backend="plt", graph_type="loglog")
+    csv_name = "lockdown"
+    clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", backend="plt", graph_type="log")

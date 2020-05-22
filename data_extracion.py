@@ -129,7 +129,8 @@ def date_to_iso(date_us_with_slash: str):  # /!\ Cannot take years before 2000. 
     return year + "-" + month.zfill(2) + "-" + day.zfill(2)
 
 
-def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=False):
+def lockdown_split(date_of_lockdown, lockdown_by_country=True, selected_data=None, country=None, to_csv=False,
+                   file_name=None):
     """
     Create two DataFrames, one before and up to date_of_lockdown (not included), one after up to now (included) (or end
     of the outbreak).
@@ -140,13 +141,19 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=Fa
     ----------
     date_of_lockdown : str
                        Must be ISO format: YYYY-MM-DD
+    lockdown_by_country : bool, optional
+                          Get the lockdown date for each country that are in LOCKDOWN_DATE, if not takes the
+                          date_of_lockdown (the default is True)
     selected_data : str, optional
                     Confirmed Cases or Reported Deaths, if None the both, Confirmed Cases then Reported Deaths
-    country : str, optional
+    country : str or None, optional
               If you want for a specific country, if None than for every country in COUNTRIES (the default is None)
     to_csv : bool, optional
              export the generated DataFrame to two.csv, by default it is in './dataset/csv_report'
-             named: before_'date_of_lockdown'.csv and after_'date_of_lockdown'.csv (the default is False)
+    file_name : str or None, optional
+                specify the name of the file to export to with the prefix 'before_' and 'after_',
+                if None then the name is: before_'date_of_lockdown'.csv and after_'date_of_lockdown'.csv
+                (the default is None)
 
     Returns
     -------
@@ -163,52 +170,51 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=Fa
 
         df = pull_data(selected_data, name)
 
+        date_of_lockdown = LOCKDOWN_DATE[name] if name in LOCKDOWN_DATE.keys() else date_of_lockdown
+
         # Get the index corresponding to the date of lockdown
         lockdown_index = df.date[df.date == date_of_lockdown].index.tolist()[0]
 
-        cases_before = df.iloc[:lockdown_index, 1][lockdown_index - 1]
-        cases_after = df.iloc[lockdown_index:, 1][len(df) - 1] - df.iloc[:lockdown_index, 1][lockdown_index - 1]
+        # Variable for the cases and death list
+        cases_lst = df.iloc[:, 1]
+        death_lst = df.iloc[:, 2]
 
-        deaths_before = df.iloc[:lockdown_index, 2][lockdown_index - 1]
-        deaths_after = df.iloc[lockdown_index:, 2][len(df) - 1] - df.iloc[:lockdown_index, 2][lockdown_index - 1]
+        cases_before = cases_lst[lockdown_index - 1]
+        cases_after = cases_lst[len(df) - 1]
+                      # - cases_lst[lockdown_index - 1]
+
+        deaths_before = death_lst[lockdown_index - 1]
+        deaths_after = death_lst[len(df) - 1]
+                       # - death_lst[lockdown_index - 1]
 
         # Initialise growth rate
-        growth_rate_before = []
-        growth_rate_after = []
+        growth_rate_before, growth_rate_after = [], []
 
         # Initialise new cases, before as to have some data already inside since I am using the already present for
         # loop after
-        new_cases_before = [((df.iloc[:lockdown_index, 1])[0]),
-                            ((df.iloc[:lockdown_index, 1])[1]) - ((df.iloc[:lockdown_index, 1])[0])]
-        new_cases_after = []
+        new_cases = [(cases_lst[0]), (cases_lst[1]) - (cases_lst[0])]
+        new_deaths = [(death_lst[0]), (death_lst[1]) - (death_lst[0])]
 
-        # idem
-        new_deaths_before = [((df.iloc[:lockdown_index, 2])[0]),
-                             ((df.iloc[:lockdown_index, 2])[1]) - ((df.iloc[:lockdown_index, 2])[0])]
-        new_deaths_after = []
+        for i in range(2, len(df)):
+            delta_n_d = (cases_lst[i]) - (cases_lst[i - 1])
+            new_cases.append(delta_n_d)
+            delta_n_d1 = (cases_lst[i - 1]) - (cases_lst[i - 2])
 
-        for i in range(2, lockdown_index):
-            delta_n_d = ((df.iloc[:lockdown_index, 1])[i]) - ((df.iloc[:lockdown_index, 1])[i - 1])
-            new_cases_before.append(delta_n_d)
-            delta_n_d1 = ((df.iloc[:lockdown_index, 1])[i - 1]) - ((df.iloc[:lockdown_index, 1])[i - 2])
-
-            new_deaths_before.append(((df.iloc[:lockdown_index, 2])[i]) - ((df.iloc[:lockdown_index, 2])[i - 1]))
+            new_deaths.append((death_lst[i]) - (death_lst[i - 1]))
 
             if delta_n_d1 == 0 or np.isnan(delta_n_d / delta_n_d1) or (delta_n_d / delta_n_d1) < 0:
                 continue
-            growth_rate_before.append(delta_n_d / delta_n_d1)
+            if i < lockdown_index:
+                growth_rate_before.append(delta_n_d / delta_n_d1)
+            else:
+                growth_rate_after.append(delta_n_d / delta_n_d1)
 
-        for i in range(lockdown_index, len(df)):
-            delta_n_d = ((df.iloc[lockdown_index - 2:, 1])[i]) - ((df.iloc[lockdown_index - 2:, 1])[i - 1])
-            new_cases_after.append(delta_n_d)
-            delta_n_d1 = ((df.iloc[lockdown_index - 2:, 1])[i - 1]) - ((df.iloc[lockdown_index - 2:, 1])[i - 2])
+        new_cases_before = new_cases[:lockdown_index]
+        new_cases_after = new_cases[lockdown_index:]
+        new_deaths_before = new_deaths[:lockdown_index]
+        new_deaths_after = new_deaths[lockdown_index:]
 
-            new_deaths_after.append(((df.iloc[lockdown_index - 2:, 2])[i]) - ((df.iloc[lockdown_index - 2:, 2])[i - 1]))
-
-            if delta_n_d1 == 0 or np.isnan(delta_n_d / delta_n_d1) or (delta_n_d / delta_n_d1) < 0:
-                continue
-            growth_rate_after.append(delta_n_d / delta_n_d1)
-
+        # Test to avoid doing a mean of empty list and getting an NaN as output
         if growth_rate_before:
             growth_rate_before_mean = np.nanmean(growth_rate_before)
         else:
@@ -224,10 +230,9 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=Fa
         new_deaths_before_mean = np.nanmean(new_deaths_before)
         new_deaths_after_mean = np.nanmean(new_deaths_after)
 
-        a = pd.DataFrame(
-            [[name, cases_before, deaths_before, growth_rate_before_mean, new_cases_before_mean,
-              new_deaths_before_mean]],
-            columns=["Country", "Cases", "Deaths", "Growth Factor", "New Cases", "New Deaths"])
+        a = pd.DataFrame([[name, cases_before, deaths_before, growth_rate_before_mean, new_cases_before_mean,
+                           new_deaths_before_mean]],
+                         columns=["Country", "Cases", "Deaths", "Growth Factor", "New Cases", "New Deaths"])
 
         df_before = df_before.append(a, ignore_index=True)
         df_after = df_after.append(
@@ -240,25 +245,39 @@ def lockdown_split(date_of_lockdown, selected_data=None, country=None, to_csv=Fa
     pbar.close()
 
     if to_csv:
-        df_before.to_csv(os.path.join(CSV_DIR, "before_" + date_of_lockdown + ".csv"), index=False)
-        df_after.to_csv(os.path.join(CSV_DIR, "after_" + date_of_lockdown + ".csv"), index=False)
+        if lockdown_by_country:
+            file_name_out_bf = "before_lockdown.csv" if file_name is None else "bf_" + file_name + ".csv"
+            file_name_out_af = "after_lockdown.csv" if file_name is None else "af_" + file_name + ".csv"
+            df_before.to_csv(os.path.join(CSV_DIR, file_name_out_bf), index=False)
+            df_after.to_csv(os.path.join(CSV_DIR, file_name_out_af), index=False)
+        else:
+            file_name_out_bf = "before_" + date_of_lockdown + ".csv" if file_name is None else "bf_" + file_name + \
+                                                                                               ".csv"
+            file_name_out_af = "after_" + date_of_lockdown + ".csv" if file_name is None else "af_" + file_name + ".csv"
+            df_before.to_csv(os.path.join(CSV_DIR, file_name_out_bf), index=False)
+            df_after.to_csv(os.path.join(CSV_DIR, file_name_out_af), index=False)
 
     return df_before, df_after
 
 
 if __name__ == "__main__":
-    test = lockdown_split("2020-04-15", to_csv=True)
-    print(test[0])
-    print(test[1])
+    lockdown_date = "2020-04-15"
+    test = lockdown_split("2020-04-13", to_csv=True, file_name=None)
+    # print(test[0])
+    # print(test[1])
 
-    # import seaborn as sns
-    # import matplotlib.pyplot as plt
+    import seaborn as sns
+    import matplotlib.pyplot as plt
 
+    df = pd.read_csv(os.path.join(CSV_DIR, "before_" + lockdown_date + ".csv"))
+    deleted_row = df[df["Country"] == "US"]
+    deleted_row_index = deleted_row.index
+    df = df.drop(deleted_row_index)
     # df = pull_data("Confirmed Cases", "France", date_as_index=True)
     # dfm = pull_data("Reported Deaths", "Italy")
     # dfuk = pull_data("Confirmed Cases", "UK")
     # print(df)
-    # sns.lineplot(data=df)
+    sns.scatterplot(x="Cases", y="New Cases", data=df)
     # sns.lineplot(data=dfm)
     # sns.lineplot(data=dfuk)
-    # plt.show()
+    plt.show()
