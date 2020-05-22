@@ -5,11 +5,9 @@ from matplotlib import style
 sns.set(style="whitegrid")
 style.use("bmh")
 
-# TODO: seems to be something wrong with the data
 
-
-def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omitted_country="France", graph_type="log",
-               backend="plt", doubling=1, **kwarg):
+def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases", y_ax="New Cases", k=3,
+               omitted_country="France", graph_type="log", backend="plt", doubling=2, **kwargs):
     """
     Create and plot clustering using kmeans using the pd.DataFrame from data_extraction.lockdown_split function.
     Print =data= for 'omitted_country' with the predicted cluster ???
@@ -18,8 +16,10 @@ def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omi
     ----------
     lockdown_date : str
                     Date in ISO format: YYYY-MM-DD
-    csv_name = {"lockdown", lockdown_date}
-               file name of the csv
+    csv_name : {"lockdown", lockdown_date}, optional
+               file name of the csv, if None then csv_name = lockdown (the default is None)
+    label_countries: bool, optional
+                     Put countries name on the plot (the default is False)
     x_ax : {'Cases', 'Deaths', 'Growth Factor', 'New Cases'}, optional
            x axis values for the graph (the default is 'Cases')
     y_ax : {'Cases', 'Deaths', 'Growth Factor', 'New Cases'}, optional
@@ -29,7 +29,7 @@ def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omi
     omitted_country : str, optional
                       (the default is 'France')
     graph_type : {'linear', 'semilog', 'logsemi', 'log'}, optional
-                 type of graph representation (logsemi is where x is linear and y is log) (the default is 'loglog')
+                 type of graph representation (logsemi is where x is linear and y is log) (the default is 'log')
     backend : {'plt', 'sns'} , optional
               type of graph, 'plt' for matplotlib.pyplot, 'sns' for seaborn (the default is 'plt')
     doubling : int, optional
@@ -55,6 +55,8 @@ def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omi
         raise ValueError("Invalid axis type. Expected one of: %s" % axis_types)
 
     before_after = ["$before$ ", "$after$ "]
+    size_marker = 50
+    csv_name = lockdown_date if csv_name is None else csv_name
 
     try:
         df1 = pd.read_csv(os.path.join(CSV_DIR, "before_" + csv_name + ".csv"))
@@ -63,11 +65,11 @@ def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omi
         created = False
     except FileNotFoundError:
         created = True
-        lck_b_ctr = kwarg.get("lockdown_by_country", True)
-        sl_dt = kwarg.get("selected_data", None)
-        ctr = kwarg.get("country", None)
-        t_cs = kwarg.get("to_csv", False)
-        fl_nm = kwarg.get("file_name", None)
+        lck_b_ctr = kwargs.get("lockdown_by_country", False)
+        sl_dt = kwargs.get("selected_data", None)
+        ctr = kwargs.get("country", None)
+        t_cs = kwargs.get("to_csv", True)
+        fl_nm = kwargs.get("file_name", csv_name)
         df_before_after = lockdown_split(lockdown_date, lockdown_by_country=lck_b_ctr, selected_data=sl_dt,
                                          country=ctr, to_csv=t_cs, file_name=fl_nm)
 
@@ -133,21 +135,25 @@ def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omi
             ax[i].set(title=("$State$ " + before_after[i] + "$" + lockdown_date + "$"), xlabel="$" + x_ax + "$",
                       ylabel="$" + y_ax + "$")
 
-            ax[i].scatter(df[x_ax], df[y_ax], c=colors)
+            ax[i].scatter(df[x_ax], df[y_ax], c=colors, s=df["Growth Factor"]*size_marker)
             ax[i].scatter(Centroids[:, 0], Centroids[:, 1], marker='*', c='black', s=20)
-            # for r, txt in enumerate(Countries):
-            #     ax[i].annotate(txt, (list(df[x_ax])[r], list(df[y_ax])[r]))
+            if label_countries:
+                for r, txt in enumerate(Countries):
+                    ax[i].annotate(txt, (list(df[x_ax])[r], list(df[y_ax])[r]), size=5)
 
-            if x_ax == "Cases" and y_ax == "New Cases":
-                ax[i].plot([k * (1 - pow(2, -7 / doubling)) for k in range(0, 1000000)], '--', color='grey',
-                           label=(doubling, 'Day Doubling Time of Confirmed Cases'))
+            if (x_ax == "Cases" or x_ax == "Deaths") and (y_ax == "New Cases" or
+                                                          y_ax == "New Deaths") and (graph_type == "log" or
+                                                                                     graph_type == "linear"):
+                max_y = max(df[y_ax]) * 2 * doubling
+                ax[i].plot([k * 1 / (2*doubling) for k in range(0, 1000000) if k <= max_y],
+                           '--', color='grey', label=(doubling, 'Day Doubling Time of Confirmed Cases'))
             ax[i].set_xscale(x_scale)
             ax[i].set_yscale(y_scale)
-            ax[i].set_xlim(auto=True)
-            ax[i].set_ylim(auto=True)
+            # ax[i].set_xlim(auto=True)
+            # ax[i].set_ylim(auto=True)
 
         else:
-            # doesn't do everything better to use plt
+            # doesn't do everything, better to use plt
             clarity_ranking = COUNTRIES
             sns.scatterplot(x=df[x_ax], y=df[y_ax], hue="Country", palette="ch:r=-.2,d=.3_r", size="Growth Factor",
                             hue_order=clarity_ranking, sizes=(10, 75), data=df, ax=ax[i]).legend_.remove()
@@ -169,7 +175,7 @@ def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omi
         print(x_ax + ":", x_value)
         print(y_ax + ":", y_value)
         cluster = kmeans.predict([[x_value, y_value]])[0]
-        ax[i].scatter(x_value, y_value, c='#fac205')
+        ax[i].scatter(x_value, y_value, c='#fac205', s=deleted_row.iloc[0]["Growth Factor"]*size_marker)
         print("Cluster : ", flatui[cluster])
         print("----------------------------------------------------------------------")
         if not created:
@@ -180,6 +186,7 @@ def clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", k=3, omi
 
 
 if __name__ == "__main__":
-    lockdown_date = "2020-04-15"
-    csv_name = "lockdown"
-    clustering(lockdown_date, csv_name, x_ax="Cases", y_ax="New Cases", backend="plt", graph_type="log")
+    lockdown = "2020-03-17"
+    name = "lockdown"
+    clustering(lockdown, name, label_countries=True, x_ax="Cases", y_ax="New Cases", backend="plt",
+               graph_type="log")

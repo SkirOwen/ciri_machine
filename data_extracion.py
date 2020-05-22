@@ -129,7 +129,7 @@ def date_to_iso(date_us_with_slash: str):  # /!\ Cannot take years before 2000. 
     return year + "-" + month.zfill(2) + "-" + day.zfill(2)
 
 
-def lockdown_split(date_of_lockdown, lockdown_by_country=True, selected_data=None, country=None, to_csv=False,
+def lockdown_split(date_of_lockdown, lockdown_by_country=True, drop_no_lc=False, selected_data=None, country=None, to_csv=False,
                    file_name=None):
     """
     Create two DataFrames, one before and up to date_of_lockdown (not included), one after up to now (included) (or end
@@ -144,6 +144,8 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, selected_data=Non
     lockdown_by_country : bool, optional
                           Get the lockdown date for each country that are in LOCKDOWN_DATE, if not takes the
                           date_of_lockdown (the default is True)
+    drop_no_lc : bool, optional
+                 drop countries that are not in LOCKDOWN_DATE
     selected_data : str, optional
                     Confirmed Cases or Reported Deaths, if None the both, Confirmed Cases then Reported Deaths
     country : str or None, optional
@@ -170,7 +172,12 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, selected_data=Non
 
         df = pull_data(selected_data, name)
 
-        date_of_lockdown = LOCKDOWN_DATE[name] if name in LOCKDOWN_DATE.keys() else date_of_lockdown
+        if drop_no_lc and name not in LOCKDOWN_DATE.keys():
+            pbar.update(1)
+            continue
+
+        date_of_lockdown = LOCKDOWN_DATE[name] if (name in LOCKDOWN_DATE.keys()
+                                                   and lockdown_by_country) is True else date_of_lockdown
 
         # Get the index corresponding to the date of lockdown
         lockdown_index = df.date[df.date == date_of_lockdown].index.tolist()[0]
@@ -261,8 +268,8 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, selected_data=Non
 
 
 if __name__ == "__main__":
-    lockdown_date = "2020-04-15"
-    test = lockdown_split("2020-04-13", to_csv=True, file_name=None)
+    lockdown_date = "2020-03-17"
+    test = lockdown_split(lockdown_date, lockdown_by_country=True, drop_no_lc=True, to_csv=True, file_name=None)
     # print(test[0])
     # print(test[1])
 
