@@ -259,8 +259,8 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, drop_no_lc=False,
 
     if to_csv:
         if lockdown_by_country:
-            file_name_out_bf = "before_lockdown.csv" if file_name is None else "bf_" + file_name + ".csv"
-            file_name_out_af = "after_lockdown.csv" if file_name is None else "af_" + file_name + ".csv"
+            file_name_out_bf = "before_lockdown.csv" if file_name is None else "before_" + file_name + ".csv"
+            file_name_out_af = "after_lockdown.csv" if file_name is None else "after_" + file_name + ".csv"
             df_before.to_csv(os.path.join(CSV_DIR, file_name_out_bf), index=False)
             df_after.to_csv(os.path.join(CSV_DIR, file_name_out_af), index=False)
         else:

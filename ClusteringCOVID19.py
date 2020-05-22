@@ -68,12 +68,15 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
     except FileNotFoundError:
         created = True
         lck_b_ctr = kwargs.get("lockdown_by_country", False)
+        dnl = kwargs.get("drop_no_lc", False)
         sl_dt = kwargs.get("selected_data", None)
         ctr = kwargs.get("country", None)
         t_cs = kwargs.get("to_csv", True)
         fl_nm = kwargs.get("file_name", csv_name)
-        df_before_after = lockdown_split(lockdown_date, lockdown_by_country=lck_b_ctr, selected_data=sl_dt,
-                                         country=ctr, to_csv=t_cs, file_name=fl_nm)
+        dsb = kwargs.get("data_split_before", False)
+        df_before_after = lockdown_split(lockdown_date, lockdown_by_country=lck_b_ctr, drop_no_lc=dnl,
+                                         selected_data=sl_dt, country=ctr, to_csv=t_cs, file_name=fl_nm,
+                                         data_split_before=dsb)
 
     fig, ax = plt.subplots(ncols=2)
     fig.subplots_adjust(hspace=0.5)
@@ -189,6 +192,6 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
 
 if __name__ == "__main__":
     lockdown = "2020-03-17"
-    name = "lockdown"
+    name = "lockdown2"
     clustering(lockdown, name, label_countries=True, x_ax="Cases", y_ax="New Cases", backend="plt",
                graph_type="log")
