@@ -99,8 +99,6 @@ Create clustering from the data from `lockdown_split` and ouptut a graph
 Graph with plt:  
 ![alt text](https://github.com/SkirOwen/ciri_machine/blob/master/logo/graph_plt.png "Graph with plt")  
 
-Graph with sns:    
-![alt text](https://github.com/SkirOwen/ciri_machine/blob/master/logo/graph_sns.png "Graph with sns")
 
 ### Report PDF
 
