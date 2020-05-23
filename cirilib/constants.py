@@ -1,10 +1,12 @@
 import os
+import sys
 from datetime import date
 
 # Possible change: change the directory import either by doing a test of is DATASET_DIR exist and giving the path from
 #  the start or doing ciri.py and execute with python -m ciri.py *****
 
-WHO_DIR = "./dataset"
+# root = sys.path.insert(0, "./")
+WHO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'dataset'))
 PDF_DIR = os.path.join(WHO_DIR, "pdf_reports")
 CSV_DIR = os.path.join(WHO_DIR, "csv_reports")
 

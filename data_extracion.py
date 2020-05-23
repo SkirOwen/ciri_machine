@@ -274,8 +274,11 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, drop_no_lc=False,
 
 
 if __name__ == "__main__":
+    # print(os.path.join(os.path.dirname(os.path.abspath(__file__)), CSV_DIR))
+    print(CSV_DIR)
     lockdown_date = "2020-03-17"
-    test = lockdown_split(lockdown_date, lockdown_by_country=True, drop_no_lc=True, to_csv=True, file_name="lockdown3")
+    test = lockdown_split(lockdown_date, country="Italy", lockdown_by_country=True, drop_no_lc=True,
+                          to_csv=True, file_name="test")
     # print(test[0])
     # print(test[1])
 

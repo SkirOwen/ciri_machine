@@ -1,8 +1,11 @@
 from cirilib.imports import *
+from contextlib import redirect_stdout
+import io
+import traceback
 import ClusteringCOVID19
 import datetime
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QTextEdit, QGridLayout, QApplication, QGroupBox,
                              QVBoxLayout, QWidget, QSlider, QFileDialog, QMainWindow, QAction, qApp,
                              QHBoxLayout, QFrame, QSplitter, QCheckBox, QDateEdit, QComboBox, QPushButton,
@@ -13,6 +16,37 @@ import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+
+
+class WorkerSignals(QObject):
+
+    finished = pyqtSignal()
+    error = pyqtSignal(tuple)
+    result = pyqtSignal(object)
+    progress = pyqtSignal(int)
+
+
+class ExtractingDataThread(QThread):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.args = kwargs
+        self.signals = WorkerSignals()
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        try:
+            result = lockdown_split(**self.args)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)  # Return the result of the processing
+        finally:
+            self.signals.finished.emit()  # Done
+
 
 
 class Canvas(FigureCanvas):
@@ -42,20 +76,28 @@ class AppForm(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # self.f = io.StringIO()
+
         # variable to by passed down to lockdown_split
+        # TODO: init with current values from widgets
         self.date_lockdown = ""
         self.lockdown_by_ctr = True
         self.drop_lc = False
         self.selected_data = None
-        self.country = None
-        self.csv_exp = False
-        self.file_name = None
-        self.data_from_beg = False
+        self.country = "Italy"
+        self.csv_exp = True
+        self.file_nm = None
+        self.data_from_beg = True
+
+        # Variable for clsustering
+        self.file_nm_to_plot = None
 
         # variable for PyQt
         self.groupBoxSet = QGroupBox("Settings")
         self.radio_button2 = QHBoxLayout()
         self.radio_button1 = QHBoxLayout()
+        self.axis_x_set = QHBoxLayout()
+        self.axis_y_set = QHBoxLayout()
         self.k_clus = QSpinBox()
         self.k_clus_label = QLabel("k value for clustering")
         self.gr_sc4 = QRadioButton("Log")
@@ -65,12 +107,18 @@ class AppForm(QMainWindow):
         self.gr_sc1.setChecked(True)
         self.gr_sc_label = QLabel("Graph Type:")
         self.ctr_labels = QCheckBox("Country Labels")
+        self.y_axis_label = QLabel("y axis:")
+        self.x_axis_label = QLabel("x axis:")
         self.y_axis = QComboBox()
         self.x_axis = QComboBox()
-        self.gene_dtb = QPushButton("Generate")
+        self.gene_dtb = QPushButton("&Generate")
+        self.gene_dtb_plt = QPushButton("Generate and &Plot")
+        self.btn_plt = QPushButton("Plot")
+        self.nm_fl_to_plt = QLineEdit()
         self.groupBoxGen = QGroupBox("Generation of Database")
         self.nm_fl = QLineEdit()
         self.data_spt_bf = QCheckBox("Data computed from the beginning")
+        self.data_spt_bf.setChecked(True)
         self.export_csv = QCheckBox("Export to .csv")
         self.export_csv.setChecked(True)
         self.lc_date = QDateEdit()
@@ -92,6 +140,12 @@ class AppForm(QMainWindow):
         self.data_spt_bf.stateChanged.connect(lambda: self.btnstate(self.data_spt_bf))
         self.export_csv.stateChanged.connect(lambda: self.btnstate(self.export_csv))
         self.lc_date.dateChanged.connect(self.onDateChanged)
+        self.k_clus.valueChanged.connect(self.valuechange)
+        self.nm_fl.textChanged.connect(self.textchanged)
+        self.gene_dtb.clicked.connect(lambda: self.whichbtn(self.gene_dtb))
+        self.gene_dtb_plt.clicked.connect(lambda: self.whichbtn(self.gene_dtb_plt))
+        self.btn_plt.clicked.connect(lambda: self.whichbtn(self.btn_plt))
+        self.nm_fl_to_plt.textChanged.connect(self.textchanged_to_plt)
 
     def initUI(self):
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -165,6 +219,11 @@ class AppForm(QMainWindow):
 
         self.k_clus.setValue(3)
 
+        self.nm_fl_to_plt.sizePolicy()
+        self.nm_fl_to_plt.setMaximumWidth(300)
+        self.nm_fl_to_plt.setFixedWidth(300)
+        self.nm_fl_to_plt.setPlaceholderText("- Enter a file name -")
+
         # Layout for radio
         self.radio_button1.addSpacing(20)
         self.radio_button1.addWidget(self.gr_sc1)
@@ -175,10 +234,19 @@ class AppForm(QMainWindow):
         self.radio_button2.addSpacing(20)
         self.radio_button2.addWidget(self.gr_sc4)
 
+        # Layout for axis
+        self.axis_x_set.addWidget(self.x_axis_label)
+        self.axis_x_set.addWidget(self.x_axis)
+        self.axis_y_set.addWidget(self.y_axis_label)
+        self.axis_y_set.addWidget(self.y_axis)
+
         # Main layout
         vbox = QVBoxLayout(self.groupBoxSet)
-        vbox.addWidget(self.x_axis)
-        vbox.addWidget(self.y_axis)
+        vbox.addWidget(self.nm_fl_to_plt)
+        vbox.addWidget(self.btn_plt)
+        vbox.addSpacing(20)
+        vbox.addLayout(self.axis_x_set)
+        vbox.addLayout(self.axis_y_set)
 
         vbox.addWidget(self.ctr_labels)
 
@@ -213,15 +281,12 @@ class AppForm(QMainWindow):
         vbox.addWidget(self.export_csv)
         vbox.addWidget(self.data_spt_bf)
         vbox.addWidget(self.nm_fl)
+        vbox.addWidget(self.gene_dtb_plt)
         vbox.addWidget(self.gene_dtb)
         vbox.addStretch(1)
         self.groupBoxGen.setLayout(vbox)
 
         return self.groupBoxGen
-
-    def print_pred_to_console(self):
-        self.output_rd.append("str(test)")
-        self.output_rd.append("2")
 
     # add if statement b.text for each widgets
     # def clickBox(self, state):
@@ -234,6 +299,20 @@ class AppForm(QMainWindow):
 
     def fileQuit(self):
         self.close()
+
+    # Get the filename
+    def textchanged(self, text):
+        self.file_nm = text
+        self.output_rd.append("contents of text box: " + text)
+
+    # Get the filename to plot
+    def textchanged_to_plt(self, text):
+        self.file_nm_to_plot = text
+        self.output_rd.append("contents of text box: " + text)
+
+    # Check value for K-Clustering
+    def valuechange(self):
+        self.output_rd.append("current value:" + str(self.k_clus.value()))
 
     # Date changed checking
     def onDateChanged(self, qDate):
@@ -305,14 +384,38 @@ class AppForm(QMainWindow):
                 self.statusBar().showMessage(b.text() + " is deselected")
                 self.data_from_beg = False
 
+    def thread_complete(self):
+        self.output_rd.append("Done")
+        self.get_thread_extraction.finished()
+
+    # Check when "generate button is pressed
+    def whichbtn(self, b):
+        # lockdown_split()
+        self.output_rd.append("clicked button is " + b.text())
+        if b.text() == "&Generate":
+            self.output_rd.append("Generating")
+            self.get_thread_extraction = ExtractingDataThread(date_of_lockdown=self.date_lockdown, lockdown_by_country=self.lockdown_by_ctr, drop_no_lc=self.drop_lc,
+                           selected_data=self.selected_data, country=self.country, to_csv=self.csv_exp,
+                           file_name=self.file_nm, data_split_before=self.data_from_beg)
+            self.get_thread_extraction.start()
+            self.get_thread_extraction.signals.finished.connect(self.thread_complete)
+
+        if b.text() == "Generate and &Plot":
+            pass
+            # clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases", y_ax="New Cases", k=3,
+            #        omitted_country="France", graph_type="log", backend="plt", doubling=2, **kwargs)
+        if b.text() == "Plot":
+            pass
+            # ClusteringCOVID19.clustering(self.lockdown_date, csv_name=self.file_nm_to_plot)
+
 
 def main():
     app = QApplication(sys.argv)
     form = AppForm()
-    form.print_pred_to_console()
     form.show()
     sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
+    print(CSV_DIR)
     main()
