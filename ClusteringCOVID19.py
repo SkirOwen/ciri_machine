@@ -187,7 +187,7 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
             print(WARNING_OLD_CSV)
 
     plt.show()
-    return
+    return fig, ax
 
 
 if __name__ == "__main__":
