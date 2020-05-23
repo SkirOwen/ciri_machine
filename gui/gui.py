@@ -5,7 +5,7 @@ import traceback
 import ClusteringCOVID19
 import datetime
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QObject, pyqtSlot
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QObject, pyqtSlot, QRunnable
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QTextEdit, QGridLayout, QApplication, QGroupBox,
                              QVBoxLayout, QWidget, QSlider, QFileDialog, QMainWindow, QAction, qApp,
                              QHBoxLayout, QFrame, QSplitter, QCheckBox, QDateEdit, QComboBox, QPushButton,
@@ -32,20 +32,8 @@ class ExtractingDataThread(QThread):
         self.args = kwargs
         self.signals = WorkerSignals()
 
-    def __del__(self):
-        self.wait()
-
     def run(self):
-        try:
-            result = lockdown_split(**self.args)
-        except:
-            traceback.print_exc()
-            exctype, value = sys.exc_info()[:2]
-            self.signals.error.emit((exctype, value, traceback.format_exc()))
-        else:
-            self.signals.result.emit(result)  # Return the result of the processing
-        finally:
-            self.signals.finished.emit()  # Done
+         result = lockdown_split(**self.args)
 
 
 
@@ -398,7 +386,8 @@ class AppForm(QMainWindow):
                            selected_data=self.selected_data, country=self.country, to_csv=self.csv_exp,
                            file_name=self.file_nm, data_split_before=self.data_from_beg)
             self.get_thread_extraction.start()
-            self.get_thread_extraction.signals.finished.connect(self.thread_complete)
+            # self.get_thread_extraction.signals.result.connect(self.print_output)
+            # self.get_thread_extraction.signals.finished.connect(self.thread_complete)
 
         if b.text() == "Generate and &Plot":
             pass
@@ -407,7 +396,8 @@ class AppForm(QMainWindow):
         if b.text() == "Plot":
             pass
             # ClusteringCOVID19.clustering(self.lockdown_date, csv_name=self.file_nm_to_plot)
-
+    def print_output(self, s):
+        print(s)
 
 def main():
     app = QApplication(sys.argv)
