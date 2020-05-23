@@ -4,6 +4,10 @@
 ```bash
 git clone https://github.com/SkirOwen/ciri_machine.git
 ```  
+Create the directory `./dataset/csv_reports` or run:
+```bash
+python -m ciri.py
+```
 
 ### Requirements
 
