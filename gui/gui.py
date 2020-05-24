@@ -81,6 +81,7 @@ class AppForm(QMainWindow):
         self.file_nm_to_plot = None
 
         # variable for PyQt
+        self.fl = ["--"]
         self.groupBoxSet = QGroupBox("Settings")
         self.radio_button2 = QHBoxLayout()
         self.radio_button1 = QHBoxLayout()
@@ -102,7 +103,7 @@ class AppForm(QMainWindow):
         self.gene_dtb = QPushButton("&Generate")
         self.gene_dtb_plt = QPushButton("Generate and &Plot")
         self.btn_plt = QPushButton("Plot")
-        self.nm_fl_to_plt = QLineEdit()
+        self.nm_fl_to_plt = QComboBox()
         self.groupBoxGen = QGroupBox("Generation of Database")
         self.nm_fl = QLineEdit()
         self.data_spt_bf = QCheckBox("Data computed from the beginning")
@@ -133,7 +134,10 @@ class AppForm(QMainWindow):
         self.gene_dtb.clicked.connect(lambda: self.whichbtn(self.gene_dtb))
         self.gene_dtb_plt.clicked.connect(lambda: self.whichbtn(self.gene_dtb_plt))
         self.btn_plt.clicked.connect(lambda: self.whichbtn(self.btn_plt))
-        self.nm_fl_to_plt.textChanged.connect(self.textchanged_to_plt)
+        # self.nm_fl_to_plt.textChanged.connect(self.textchanged_to_plt)
+        self.x_axis.activated[str].connect(lambda: self.onChanged(self.x_axis, "x"))
+        self.y_axis.activated[str].connect(lambda: self.onChanged(self.y_axis, "y"))
+        self.nm_fl_to_plt.activated[str].connect(lambda: self.onChanged(self.nm_fl_to_plt, "plot"))
 
     def initUI(self):
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -205,12 +209,9 @@ class AppForm(QMainWindow):
         self.x_axis.addItems(["Cases", "Deaths", "Growth Factor", "New Cases", "New Deaths"])
         self.y_axis.addItems(["New Cases", "New Deaths", "Growth Factor", "Cases", "Deaths"])
 
-        self.k_clus.setValue(3)
+        self.nm_fl_to_plt.addItems(self.get_current_files_available())
 
-        self.nm_fl_to_plt.sizePolicy()
-        self.nm_fl_to_plt.setMaximumWidth(300)
-        self.nm_fl_to_plt.setFixedWidth(300)
-        self.nm_fl_to_plt.setPlaceholderText("- Enter a file name -")
+        self.k_clus.setValue(3)
 
         # Layout for radio
         self.radio_button1.addSpacing(20)
@@ -288,10 +289,30 @@ class AppForm(QMainWindow):
     def fileQuit(self):
         self.close()
 
+    # Generate list of files name availble for plot
+    def get_current_files_available(self):
+        fl = os.listdir(CSV_DIR)
+        fl = fl[:-len(fl)//2]
+        for i in range(len(fl)):
+            self.fl.append(fl[i][6:-4])
+        return self.fl
+
+    # Get ComboBox value
+    def onChanged(self, b, v):
+        if v == "x":
+            self.output_rd.append("x sele" + b.currentText())
+        if v == "y":
+            self.output_rd.append("x sele" + b.currentText())
+        if v == "plot":
+            self.output_rd.append("x sele" + b.currentText())
+
+
     # Get the filename
     def textchanged(self, text):
+        if text == "":
+            text = None
         self.file_nm = text
-        self.output_rd.append("contents of text box: " + text)
+        self.output_rd.append("contents of text box: " + str(text))
 
     # Get the filename to plot
     def textchanged_to_plt(self, text):
@@ -382,22 +403,32 @@ class AppForm(QMainWindow):
         self.output_rd.append("clicked button is " + b.text())
         if b.text() == "&Generate":
             self.output_rd.append("Generating")
-            self.get_thread_extraction = ExtractingDataThread(date_of_lockdown=self.date_lockdown, lockdown_by_country=self.lockdown_by_ctr, drop_no_lc=self.drop_lc,
-                           selected_data=self.selected_data, country=self.country, to_csv=self.csv_exp,
-                           file_name=self.file_nm, data_split_before=self.data_from_beg)
-            self.get_thread_extraction.start()
+            # self.get_thread_extraction = ExtractingDataThread(date_of_lockdown=self.date_lockdown, lockdown_by_country=self.lockdown_by_ctr, drop_no_lc=self.drop_lc,
+            #                selected_data=self.selected_data, country=self.country, to_csv=self.csv_exp,
+            #                file_name=self.file_nm, data_split_before=self.data_from_beg)
+            # self.get_thread_extraction.start()
+            if self.csv_exp and (self.file_nm if self.file_nm is not None else "lockdown" not in self.fl):
+                self.fl.append(self.file_nm if self.file_nm is not None else "lockdown")
+                self.nm_fl_to_plt.clear()
+                self.nm_fl_to_plt.addItems(self.fl)
             # self.get_thread_extraction.signals.result.connect(self.print_output)
             # self.get_thread_extraction.signals.finished.connect(self.thread_complete)
 
         if b.text() == "Generate and &Plot":
             pass
+            if self.csv_exp and (self.file_nm if self.file_nm is not None else "lockdown" not in self.fl):
+                self.fl.append(self.file_nm if self.file_nm is not None else "lockdown")
+                self.nm_fl_to_plt.clear()
+                self.nm_fl_to_plt.addItems(self.fl)
             # clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases", y_ax="New Cases", k=3,
             #        omitted_country="France", graph_type="log", backend="plt", doubling=2, **kwargs)
         if b.text() == "Plot":
             pass
             # ClusteringCOVID19.clustering(self.lockdown_date, csv_name=self.file_nm_to_plot)
+
     def print_output(self, s):
         print(s)
+
 
 def main():
     app = QApplication(sys.argv)
