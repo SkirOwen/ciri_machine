@@ -5,6 +5,7 @@ from matplotlib import style
 sns.set(style="whitegrid")
 style.use("bmh")
 
+
 # TODO: annotate when drop_no_lc is True is wrong
 
 
@@ -140,7 +141,7 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
             ax[i].set(title=("$State$ " + before_after[i] + "$" + lockdown_date + "$"), xlabel="$" + x_ax + "$",
                       ylabel="$" + y_ax + "$")
 
-            ax[i].scatter(df[x_ax], df[y_ax], c=colors, s=df["Growth Factor"]*size_marker)
+            ax[i].scatter(df[x_ax], df[y_ax], c=colors, s=df["Growth Factor"] * size_marker)
             ax[i].scatter(Centroids[:, 0], Centroids[:, 1], marker='*', c='black', s=20)
             if label_countries:
                 for r, txt in enumerate(Countries):
@@ -150,7 +151,7 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
                                                           y_ax == "New Deaths") and (graph_type == "log" or
                                                                                      graph_type == "linear"):
                 max_y = max(df[y_ax]) * 2 * doubling
-                ax[i].plot([k * 1 / (2*doubling) for k in range(0, 1000000) if k <= max_y],
+                ax[i].plot([k * 1 / (2 * doubling) for k in range(0, 1000000) if k <= max_y],
                            '--', color='grey', label=(doubling, 'Day Doubling Time of Confirmed Cases'))
             ax[i].set_xscale(x_scale)
             ax[i].set_yscale(y_scale)
@@ -174,24 +175,48 @@ def clustering(lockdown_date, csv_name=None, label_countries=False, x_ax="Cases"
         # Making predictions
         print("----------------------------------------------------------------------")
         # TODO: this is not a prediction at all!
-        print("PREDICTION FOR", omitted_country.upper(), before_after[i][1:-2],  lockdown_date, ":")
+        print("PREDICTION FOR", omitted_country.upper(), before_after[i][1:-2], lockdown_date, ":")
         x_value = deleted_row.iloc[0][x_ax]
         y_value = deleted_row.iloc[0][y_ax]
         print(x_ax + ":", x_value)
         print(y_ax + ":", y_value)
         cluster = kmeans.predict([[x_value, y_value]])[0]
-        ax[i].scatter(x_value, y_value, c='#fac205', s=deleted_row.iloc[0]["Growth Factor"]*size_marker)
+        ax[i].scatter(x_value, y_value, c='#fac205', s=deleted_row.iloc[0]["Growth Factor"] * size_marker)
         print("Cluster : ", flatui[cluster])
         print("----------------------------------------------------------------------")
         if not created:
             print(WARNING_OLD_CSV)
 
-    plt.show()
+    if __name__ == "__main__":
+        plt.show()
+
     return fig, ax
+
+
+class Clustering:
+    def __init__(self, lockdown_date, csv_name=None, label_countries=False, x_ax="Cases", y_ax="New Cases", k=3,
+                 omitted_country="France", graph_type="log", backend="plt", doubling=2, **kwargs):
+        self.lockown_date = lockdown_date
+        self.csv_name = csv_name
+        self.label_contries = label_countries
+        self.x_ax = x_ax
+        self.y_ax = y_ax
+        self.omitted_country = omitted_country
+        self.graph_type = graph_type
+        self.backend = backend
+        self.doubling = doubling
+        self.kwargs = kwargs
+
+    def k_compute(self):
+        pass
+
+    def plotting(self):
+        pass
 
 
 if __name__ == "__main__":
     lockdown = "2020-03-17"
     name = "lockdown"
-    clustering(lockdown, name, label_countries=False, x_ax="Cases", y_ax="New Cases", backend="plt",
+    clustering(lockdown, name, lockdown_by_country=True, label_countries=False,
+               x_ax="Cases", y_ax="New Cases", backend="plt",
                graph_type="log", kwargs={})

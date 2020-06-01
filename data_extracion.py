@@ -261,14 +261,16 @@ def lockdown_split(date_of_lockdown, lockdown_by_country=True, drop_no_lc=False,
         if lockdown_by_country:
             file_name_out_bf = "before_lockdown.csv" if file_name is None else "before_" + file_name + ".csv"
             file_name_out_af = "after_lockdown.csv" if file_name is None else "after_" + file_name + ".csv"
-            df_before.to_csv(os.path.join(CSV_DIR, file_name_out_bf), index=False)
-            df_after.to_csv(os.path.join(CSV_DIR, file_name_out_af), index=False)
+            outfile1 = os.path.join(CSV_DIR, file_name_out_bf)
+            outfile2 = os.path.join(CSV_DIR, file_name_out_af)
         else:
-            file_name_out_bf = "before_" + date_of_lockdown + ".csv" if file_name is None else "before_" + file_name + \
-                                                                                               ".csv"
+            file_name_out_bf = "before_" + date_of_lockdown + ".csv" if file_name is None else "before_" + file_name + ".csv"                                                                            ".csv"
             file_name_out_af = "after_" + date_of_lockdown + ".csv" if file_name is None else "after_" + file_name + ".csv"
-            df_before.to_csv(os.path.join(CSV_DIR, file_name_out_bf), index=False)
-            df_after.to_csv(os.path.join(CSV_DIR, file_name_out_af), index=False)
+            outfile1 = os.path.join(CSV_DIR, file_name_out_bf)
+            outfile2 = os.path.join(CSV_DIR, file_name_out_af)
+
+        df_before.to_csv(outfile1, index=False)
+        df_after.to_csv(outfile2, index=False)
 
     return df_before, df_after
 

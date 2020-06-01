@@ -5,7 +5,7 @@ import traceback
 import ClusteringCOVID19
 import datetime
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QObject, pyqtSlot, QRunnable
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QObject, pyqtSlot, QRunnable, pyqtBoundSignal
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QTextEdit, QGridLayout, QApplication, QGroupBox,
                              QVBoxLayout, QWidget, QSlider, QFileDialog, QMainWindow, QAction, qApp,
                              QHBoxLayout, QFrame, QSplitter, QCheckBox, QDateEdit, QComboBox, QPushButton,
@@ -19,7 +19,6 @@ from matplotlib.figure import Figure
 
 
 class WorkerSignals(QObject):
-
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
@@ -30,26 +29,28 @@ class ExtractingDataThread(QThread):
     def __init__(self, **kwargs):
         super().__init__()
         self.args = kwargs
-        self.signals = WorkerSignals()
 
     def run(self):
-         result = lockdown_split(**self.args)
-
+        lockdown_split(**self.args)
 
 
 class Canvas(FigureCanvas):
     """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig, axes = plt.subplots(ncols=2)
-        super(Canvas, self).__init__(fig)
+    def __init__(self, parent=None, dpi=100, **kwargs):
+        self.fig, self.axes = ClusteringCOVID19.clustering("2020-03-17", "lockdown", **kwargs)
+        super(Canvas, self).__init__(self.fig)
 
         # ClusteringCOVID19.clustering("2020-03-17", "lockdown3")
 
-        FigureCanvas.__init__(self, fig)
+        FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
 
         FigureCanvas.setSizePolicy(self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        FigureCanvas.updateGeometry(self)
+
+    def update_plot(self, **kwargs):
+        self.fig, self.axes = ClusteringCOVID19.clustering("2020-03-17", "lockdown", **kwargs)
         FigureCanvas.updateGeometry(self)
 
 
@@ -67,7 +68,6 @@ class AppForm(QMainWindow):
         # self.f = io.StringIO()
 
         # variable to by passed down to lockdown_split
-        # TODO: init with current values from widgets
         self.date_lockdown = ""
         self.lockdown_by_ctr = True
         self.drop_lc = False
@@ -114,9 +114,12 @@ class AppForm(QMainWindow):
         self.dr_no_lc = QCheckBox("Drop no LC")
         self.q_lcd_b_cnt = QCheckBox("Lockdown by country")
         self.q_lcd_b_cnt.setChecked(True)
+        self.dr_no_lc.setEnabled(True)
         self.output_rd = QtWidgets.QTextBrowser()
         self.main_widget = QtWidgets.QWidget(self)
         self.initUI()
+
+
 
         # Extract state for widgets
         self.gr_sc1.toggled.connect(lambda: self.btnstate(self.gr_sc1))
@@ -152,6 +155,8 @@ class AppForm(QMainWindow):
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
+        # fileMenu = menubar.addAction("&Tools")
+
         fileMenu.addAction(exitAct)
 
         self.setGeometry(300, 300, 1000, 1000)
@@ -161,15 +166,19 @@ class AppForm(QMainWindow):
         self.setCentralWidget(self.main_widget)
 
         # hbox = QHBoxLayout(self)
-        #
+
         # splitter1 = QSplitter(Qt.Vertical)
-        # splitter1.addWidget(self.GroupSettings().setFrameShape(QFrame.StyledPanel))
-        # splitter1.addWidget(self.ConsoleOutput().setFrameShape(QFrame.StyledPanel))
-        #
+        # splitter1.addWidget(QFrame().addWidget(self.GroupSettings()))
+        # splitter1.addWidget(QFrame(self.output_rd).setFrameShape(QFrame.StyledPanel))
+
         # splitter2 = QSplitter(Qt.Horizontal)
-        # splitter2.addWidget(self.GroupGraph().setFrameShape(QFrame.StyledPanel))
+        # splitter2.addWidget(self.GroupSettings())
         # splitter2.addWidget(splitter1)
         #
+        # splitter3 = QSplitter(Qt.Horizontal)
+        # splitter3.addWidget(self.GroupGraph())
+        # splitter3.addWidget(splitter2)
+
         # hbox.addWidget(splitter2)
         # self.setLayout(hbox)
 
@@ -182,18 +191,19 @@ class AppForm(QMainWindow):
 
     def GroupGraph(self):
         # graphics and toolbars
-        Rd = RawDataCanvas(self.main_widget, width=5, height=5, dpi=100)
         # Cd = ProcessDataCanvas(self.main_widget, width=5, height=5, dpi=100)
-        toolbarRd = NavigationToolbar(Rd, self)
         # toolbarCd = NavigationToolbar(Cd, self)
+        # attribute for graph
+        self.Rd = Canvas(self.main_widget, dpi=100)
+        self.toolbarRd = NavigationToolbar(self.Rd, self)
 
         groupBoxGraph = QGroupBox('Graphics and toolbars')
         vbox = QVBoxLayout()
-        vbox.addWidget(toolbarRd)
-        vbox.addWidget(Rd)
+        vbox.addWidget(self.toolbarRd)
+        vbox.addWidget(self.Rd)
         # vbox.addWidget(toolbarCd)
         # vbox.addWidget(Cd)
-        vbox.addStretch(1)
+        # vbox.addStretch(1)
         groupBoxGraph.setLayout(vbox)
 
         return groupBoxGraph
@@ -292,7 +302,7 @@ class AppForm(QMainWindow):
     # Generate list of files name availble for plot
     def get_current_files_available(self):
         fl = os.listdir(CSV_DIR)
-        fl = fl[:-len(fl)//2]
+        fl = fl[:-len(fl) // 2]
         for i in range(len(fl)):
             self.fl.append(fl[i][6:-4])
         return self.fl
@@ -305,7 +315,6 @@ class AppForm(QMainWindow):
             self.output_rd.append("x sele" + b.currentText())
         if v == "plot":
             self.output_rd.append("x sele" + b.currentText())
-
 
     # Get the filename
     def textchanged(self, text):
@@ -359,9 +368,12 @@ class AppForm(QMainWindow):
             if b.isChecked():
                 self.statusBar().showMessage(b.text() + " is selected")
                 self.lockdown_by_ctr = True
+                self.dr_no_lc.setEnabled(True)
+
             else:
                 self.statusBar().showMessage(b.text() + " is deselected")
                 self.lockdown_by_ctr = False
+                self.dr_no_lc.setEnabled(False)
 
         if b.text() == "Drop no LC":
             if b.isChecked():
@@ -374,6 +386,7 @@ class AppForm(QMainWindow):
         if b.text() == "Country Labels":
             if b.isChecked():
                 self.statusBar().showMessage(b.text() + " is selected")
+                self.Rd = Canvas(self.main_widget, dpi=100, label_countries=True)
             else:
                 self.statusBar().showMessage(b.text() + " is deselected")
 
@@ -403,10 +416,14 @@ class AppForm(QMainWindow):
         self.output_rd.append("clicked button is " + b.text())
         if b.text() == "&Generate":
             self.output_rd.append("Generating")
-            # self.get_thread_extraction = ExtractingDataThread(date_of_lockdown=self.date_lockdown, lockdown_by_country=self.lockdown_by_ctr, drop_no_lc=self.drop_lc,
-            #                selected_data=self.selected_data, country=self.country, to_csv=self.csv_exp,
-            #                file_name=self.file_nm, data_split_before=self.data_from_beg)
-            # self.get_thread_extraction.start()
+            self.get_thread_extraction = ExtractingDataThread(date_of_lockdown=self.date_lockdown,
+                                                              lockdown_by_country=self.lockdown_by_ctr,
+                                                              drop_no_lc=self.drop_lc,
+                                                              selected_data=self.selected_data, country=self.country,
+                                                              to_csv=self.csv_exp,
+                                                              file_name=self.file_nm,
+                                                              data_split_before=self.data_from_beg)
+            self.get_thread_extraction.start()
             if self.csv_exp and (self.file_nm if self.file_nm is not None else "lockdown" not in self.fl):
                 self.fl.append(self.file_nm if self.file_nm is not None else "lockdown")
                 self.nm_fl_to_plt.clear()
