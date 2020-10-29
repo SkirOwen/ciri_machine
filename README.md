@@ -23,7 +23,6 @@ pip3 install -r requirements.txt
 ## Data Sources
 US data come from     [NYTimes](https://github.com/nytimes/covid-19-data)  
 Non-US data come from [(CSSE) Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19)  
-Thanks to both of them!
 
 ## Using cirilib
 ### data_extraction
